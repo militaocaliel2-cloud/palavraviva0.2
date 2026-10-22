@@ -1,8 +1,9 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
+import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View, Pressable } from "react-native";
 
-import { DAILY_WORD } from "@/constants/content";
+import { getDailyWord } from "@/constants/content";
 import { IconCircle, ProgressRing, ScreenHeader, SurfaceCard } from "@/components/palavra-viva-ui";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
@@ -19,7 +20,17 @@ export default function HomeScreen() {
   const colors = useColors();
   const { colorScheme } = useThemeContext();
   const { completed, completedCount, progress, streak, prayerDays, ready, setThemePreference } = useFaithJourney();
-  const dateLabel = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date());
+  const [today, setToday] = useState(() => new Date());
+  const dailyWord = getDailyWord(today);
+  const dateLabel = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(today);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      setToday((current) => current.toDateString() === now.toDateString() ? current : now);
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <ScreenContainer>
@@ -42,10 +53,10 @@ export default function HomeScreen() {
             <Text style={styles.wordLabel}>PALAVRA DO DIA</Text>
             <MaterialIcons name="flare" size={18} color={colors.gold} />
           </View>
-          <Text style={styles.quote}>“{DAILY_WORD.quote}”</Text>
-          <Text style={styles.reference}>— {DAILY_WORD.reference}</Text>
+          <Text style={styles.quote}>“{dailyWord.quote}”</Text>
+          <Text style={styles.reference}>— {dailyWord.reference}</Text>
           <View style={styles.wordDivider} />
-          <Text style={styles.wordReflection}>{DAILY_WORD.reflection}</Text>
+          <Text style={styles.wordReflection}>{dailyWord.reflection}</Text>
         </SurfaceCard>
 
         <SurfaceCard style={styles.progressCard}>

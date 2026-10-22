@@ -63,3 +63,16 @@
 - [x] O app oferece modo claro/escuro persistente, com acessibilidade nos botões e estados selecionados visíveis.
 - [x] Existem as páginas `/politica-de-privacidade` e `/termos-de-uso`, com links acessíveis a partir do app.
 - [x] O Expo Web possui meta tags mobile, ícone de toque iOS/Android, `manifest.json`, modo standalone e orientação retrato.
+
+
+## Player de áudio da Liturgia
+
+- [x] A página `/liturgia` usa a Web Speech API no Web, com idioma `pt-BR`, e fallback `expo-speech` no app nativo.
+- [x] O player lê em sequência Primeira Leitura, Salmo Responsorial, Segunda Leitura quando houver e Evangelho do Dia.
+- [x] O player oferece Play/Pause, Stop, velocidades 0.75x, 1x, 1.25x e 1.5x e indicador do trecho atual.
+- [x] Cada card de leitura oferece um botão individual “Ouvir”, com pausa/retomada do trecho selecionado.
+- [x] O áudio é cancelado ao pausar, parar, trocar de leitura, trocar de data, sair da aba ou desmontar a tela.
+
+## Palavra do Dia dinâmica
+
+- [x] A tela Início escolhe a Palavra do Dia conforme a data local atual e atualiza automaticamente na virada do dia.

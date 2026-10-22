@@ -1,8 +1,17 @@
-export const DAILY_WORD = {
-  quote: "Eu sou o caminho, a verdade e a vida.",
-  reference: "Jo 14,6",
-  reflection: "Hoje, escolha um pequeno passo que aproxime seu coração do que é essencial.",
-};
+const DAILY_WORDS = [
+  { quote: "Eu sou o caminho, a verdade e a vida.", reference: "Jo 14,6", reflection: "Hoje, escolha um pequeno passo que aproxime seu coração do que é essencial." },
+  { quote: "Permanecei em mim, e eu permanecerei em vós.", reference: "Jo 15,4", reflection: "A presença de Deus também pode ser encontrada no ritmo simples deste dia." },
+  { quote: "O Senhor é minha luz e minha salvação.", reference: "Sl 26(27),1", reflection: "Deixe uma pequena clareza iluminar a próxima escolha que você precisa fazer." },
+  { quote: "Vinde a mim, todos vós que estais cansados.", reference: "Mt 11,28", reflection: "Hoje, faça espaço para descansar o coração e receber uma paz que não precisa ser conquistada." },
+  { quote: "Tudo posso naquele que me fortalece.", reference: "Fl 4,13", reflection: "Caminhe com confiança: a graça acompanha também os passos pequenos." },
+];
+
+export function getDailyWord(date = new Date()) {
+  const dayNumber = Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000);
+  return DAILY_WORDS[((dayNumber % DAILY_WORDS.length) + DAILY_WORDS.length) % DAILY_WORDS.length];
+}
+
+export const DAILY_WORD = getDailyWord(new Date());
 
 export const LITURGY = {
   dateLabel: "quinta-feira, 22 de outubro de 2026",

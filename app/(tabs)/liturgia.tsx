@@ -1,14 +1,17 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useFocusEffect } from "expo-router";
 import { captureRef } from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
+import { LiturgyAudioPlayer } from "@/components/liturgy-audio-player";
 import { PrimaryButton, ScreenHeader, SurfaceCard } from "@/components/palavra-viva-ui";
 import { DatePicker } from "@/components/date-picker";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { useFaithJourney } from "@/hooks/use-faith-journey";
+import { useSpeechPlayer, type SpeechItem } from "@/hooks/use-speech-player";
 import { fetchLiturgy, formatReadableDate, type LiturgyDay, type LiturgyReading } from "@/lib/liturgy-api";
 
 const APP_URL = "https://palavra-viva-drab.vercel.app/";
@@ -68,6 +71,15 @@ export default function LiturgyScreen() {
     ];
   }, [liturgy]);
 
+  const speechItems = useMemo<SpeechItem[]>(() => sections.flatMap((section) => section.readings.map((reading, index) => ({
+    id: `${section.key}-${index}`,
+    label: section.label,
+    text: [section.label, reading.titulo, reading.referencia, reading.refrao ? `Refrão: ${reading.refrao}` : "", reading.texto].filter(Boolean).join(". "),
+  }))), [sections]);
+  const audio = useSpeechPlayer(speechItems);
+  const stopAudio = audio.stop;
+  useFocusEffect(useCallback(() => () => stopAudio(), [stopAudio]));
+
   const gospel = sections.find((section) => section.key === "evangelho")?.readings[0];
   const isToday = selectedDate.toDateString() === new Date().toDateString();
   const dateLabel = formatReadableDate(selectedDate);
@@ -124,6 +136,8 @@ export default function LiturgyScreen() {
 
         <DatePicker visible={pickerVisible} value={selectedDate} onChange={chooseDate} onClose={() => setPickerVisible(false)} />
 
+        <LiturgyAudioPlayer supported={audio.supported} isPlaying={audio.isPlaying} isPaused={audio.isPaused} rate={audio.rate} currentLabel={audio.currentLabel} onPlay={audio.playAll} onPause={audio.togglePause} onStop={audio.stop} onRate={audio.setRate} />
+
         <View style={styles.readingHeader}>
           <Text style={[styles.readingEyebrow, { color: colors.primary }]}>LEITURAS COMPLETAS</Text>
           <View style={[styles.fontControls, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -147,7 +161,7 @@ export default function LiturgyScreen() {
             {sections.map((section) => {
               const readings = section.readings.length > 0 ? section.readings : [{ texto: "Não há segunda leitura hoje.", referencia: "" }];
               return <View key={section.key} style={styles.sectionGroup}>
-                {readings.map((reading, index) => <ReadingCard key={`${section.key}-${index}`} section={section.label} reading={reading} fontScale={fontScale} colors={colors} onShare={() => shareReading(section.label, reading)} onGenerateCard={section.key === "evangelho" ? () => setShareModalVisible(true) : undefined} />)}
+                {readings.map((reading, index) => { const speechIndex = speechItems.findIndex((item) => item.id === `${section.key}-${index}`); return <ReadingCard key={`${section.key}-${index}`} section={section.label} reading={reading} fontScale={fontScale} colors={colors} onShare={() => shareReading(section.label, reading)} onListen={speechIndex >= 0 ? () => audio.playItem(speechIndex) : undefined} isListening={speechIndex >= 0 && audio.currentIndex === speechIndex && (audio.isPlaying || audio.isPaused)} onGenerateCard={section.key === "evangelho" ? () => setShareModalVisible(true) : undefined} />; })}
               </View>;
             })}
           </View>
@@ -179,12 +193,12 @@ export default function LiturgyScreen() {
   );
 }
 
-function ReadingCard({ section, reading, fontScale, colors, onShare, onGenerateCard }: { section: string; reading: LiturgyReading; fontScale: number; colors: ReturnType<typeof useColors>; onShare: () => void; onGenerateCard?: () => void }) {
+function ReadingCard({ section, reading, fontScale, colors, onShare, onListen, isListening, onGenerateCard }: { section: string; reading: LiturgyReading; fontScale: number; colors: ReturnType<typeof useColors>; onShare: () => void; onListen?: () => void; isListening?: boolean; onGenerateCard?: () => void }) {
   return <SurfaceCard style={styles.readingCard}>
     <View style={styles.readingMeta}><View style={styles.readingMetaText}><Text style={[styles.readingLabel, { color: colors.primary }]}>{section}</Text>{reading.titulo ? <Text style={[styles.readingSubtitle, { color: colors.muted }]}>{reading.titulo}</Text> : null}</View><Text style={[styles.readingReference, { color: colors.muted }]}>{reading.referencia}</Text></View>
     {reading.refrao ? <View style={[styles.refrain, { backgroundColor: colors.primarySoft }]}><Text style={[styles.refrainLabel, { color: colors.primary }]}>REFRÃO</Text><Text style={[styles.refrainText, { color: colors.foreground, fontSize: 15 * fontScale, lineHeight: 23 * fontScale }]}>{reading.refrao}</Text></View> : null}
     <Text style={[styles.readingText, { color: colors.foreground, fontSize: 16 * fontScale, lineHeight: 25 * fontScale }]}>{reading.texto ?? "Conteúdo não disponível para esta leitura."}</Text>
-    <View style={[styles.shareRow, { borderTopColor: colors.border }]}><Pressable onPress={onShare} accessibilityRole="button" accessibilityLabel={`Compartilhar ${section} no WhatsApp`} style={({ pressed }) => [styles.shareButton, { backgroundColor: `${colors.success}1C`, opacity: pressed ? 0.7 : 1 }]}><MaterialIcons name="share" size={17} color={colors.success} /><Text style={[styles.shareButtonText, { color: colors.success }]}>Compartilhar no WhatsApp</Text></Pressable>{onGenerateCard ? <Pressable onPress={onGenerateCard} accessibilityRole="button" accessibilityLabel="Gerar imagem do Evangelho para Status ou Stories" style={({ pressed }) => [styles.cardButton, { opacity: pressed ? 0.7 : 1 }]}><MaterialIcons name="image" size={17} color={colors.primary} /><Text style={[styles.cardButtonText, { color: colors.primary }]}>Gerar Imagem para Status/Stories</Text></Pressable> : null}</View>
+    <View style={[styles.shareRow, { borderTopColor: colors.border }]}>{onListen ? <Pressable onPress={onListen} accessibilityRole="button" accessibilityLabel={`${isListening ? "Pausar" : "Ouvir"} ${section}`} style={({ pressed }) => [styles.listenButton, { backgroundColor: colors.primarySoft, opacity: pressed ? 0.7 : 1 }]}><MaterialIcons name={isListening ? "pause" : "volume-up"} size={17} color={colors.primary} /><Text style={[styles.listenButtonText, { color: colors.primary }]}>{isListening ? "Pausar" : "Ouvir"}</Text></Pressable> : null}<Pressable onPress={onShare} accessibilityRole="button" accessibilityLabel={`Compartilhar ${section} no WhatsApp`} style={({ pressed }) => [styles.shareButton, { backgroundColor: `${colors.success}1C`, opacity: pressed ? 0.7 : 1 }]}><MaterialIcons name="share" size={17} color={colors.success} /><Text style={[styles.shareButtonText, { color: colors.success }]}>Compartilhar no WhatsApp</Text></Pressable>{onGenerateCard ? <Pressable onPress={onGenerateCard} accessibilityRole="button" accessibilityLabel="Gerar imagem do Evangelho para Status ou Stories" style={({ pressed }) => [styles.cardButton, { opacity: pressed ? 0.7 : 1 }]}><MaterialIcons name="image" size={17} color={colors.primary} /><Text style={[styles.cardButtonText, { color: colors.primary }]}>Gerar Imagem para Status/Stories</Text></Pressable> : null}</View>
   </SurfaceCard>;
 }
 
@@ -227,6 +241,8 @@ const styles = StyleSheet.create({
   refrainLabel: { fontSize: 9, fontWeight: "800", letterSpacing: 1.2, marginBottom: 5 },
   refrainText: { fontFamily: "serif", fontWeight: "700" },
   shareRow: { borderTopWidth: 1, marginTop: 16, paddingTop: 12, flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" },
+  listenButton: { borderRadius: 12, paddingHorizontal: 10, paddingVertical: 9, flexDirection: "row", alignItems: "center", gap: 5 },
+  listenButtonText: { fontSize: 11, fontWeight: "800" },
   shareButton: { borderRadius: 12, paddingHorizontal: 10, paddingVertical: 9, flexDirection: "row", alignItems: "center", gap: 6 },
   shareButtonText: { fontSize: 11, fontWeight: "800" },
   cardButton: { paddingHorizontal: 9, paddingVertical: 9, flexDirection: "row", alignItems: "center", gap: 5, flexShrink: 1 },
