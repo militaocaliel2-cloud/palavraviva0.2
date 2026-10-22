@@ -10,6 +10,7 @@ const tabs = [
   { name: "index", title: "Início", icon: "home" },
   { name: "liturgia", title: "Liturgia", icon: "menu-book" },
   { name: "prayers", title: "Orações", icon: "favorite-border" },
+  { name: "favorites", title: "Favoritos", icon: "bookmark-border" },
   { name: "rosary", title: "Terço", icon: "radio-button-checked" },
   { name: "reminders", title: "Lembretes", icon: "notifications-none" },
 ] as const;
@@ -26,7 +27,7 @@ export default function TabLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
         tabBarButton: HapticTab,
-        tabBarLabelStyle: { fontSize: 10, fontWeight: "700", marginBottom: 2 },
+        tabBarLabelStyle: { fontSize: 9, fontWeight: "700", marginBottom: 2 },
         tabBarItemStyle: { paddingTop: 5 },
         tabBarStyle: { height: 62 + bottomPadding, paddingBottom: bottomPadding, paddingTop: 3, backgroundColor: colors.surface, borderTopColor: colors.border, borderTopWidth: 1 },
       }}

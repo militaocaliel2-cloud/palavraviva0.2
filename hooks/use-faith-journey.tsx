@@ -5,6 +5,7 @@ import { useThemeContext } from "@/lib/theme-provider";
 
 export type JourneyKey = "liturgy" | "prayer" | "rosary";
 export type ThemePreference = "system" | "light" | "dark";
+export type FavoriteReading = { id: string; title: string; section: string; reference: string; text: string; dateLabel: string };
 
 type FaithState = {
   completed: Record<JourneyKey, boolean>;
@@ -15,6 +16,8 @@ type FaithState = {
   reminderTime: string;
   reminderDays: number[];
   rosaryStep: number;
+  favorites: FavoriteReading[];
+  reflectionNotes: Record<string, string>;
 };
 
 type FaithJourneyContextValue = FaithState & {
@@ -27,6 +30,8 @@ type FaithJourneyContextValue = FaithState & {
   resetRosary: () => void;
   setThemePreference: (preference: ThemePreference) => void;
   setReminderSettings: (settings: Partial<Pick<FaithState, "reminderEnabled" | "reminderTime" | "reminderDays">>) => void;
+  toggleFavorite: (favorite: FavoriteReading) => void;
+  setReflectionNote: (dateKey: string, note: string) => void;
 };
 
 const STORAGE_KEY = "palavra-viva-faith-journey-v1";
@@ -40,6 +45,8 @@ const DEFAULT_STATE: FaithState = {
   reminderTime: "07:30",
   reminderDays: [1, 2, 3, 4, 5, 6, 0],
   rosaryStep: 0,
+  favorites: [],
+  reflectionNotes: {},
 };
 
 const FaithJourneyContext = createContext<FaithJourneyContextValue | null>(null);
@@ -60,6 +67,8 @@ export function FaithJourneyProvider({ children }: { children: React.ReactNode }
               ...DEFAULT_STATE,
               ...saved,
               completed: { ...DEFAULT_STATE.completed, ...(saved.completed ?? {}) },
+              favorites: Array.isArray(saved.favorites) ? saved.favorites : [],
+              reflectionNotes: saved.reflectionNotes ?? {},
             };
             setState(nextState);
             if (nextState.themePreference !== "system") setColorScheme(nextState.themePreference);
@@ -121,6 +130,11 @@ export function FaithJourneyProvider({ children }: { children: React.ReactNode }
         if (preference !== "system") setColorScheme(preference);
       },
       setReminderSettings: (settings) => setState((current) => ({ ...current, ...settings })),
+      toggleFavorite: (favorite) => setState((current) => {
+        const exists = current.favorites.some((item) => item.id === favorite.id);
+        return { ...current, favorites: exists ? current.favorites.filter((item) => item.id !== favorite.id) : [favorite, ...current.favorites] };
+      }),
+      setReflectionNote: (dateKey, note) => setState((current) => ({ ...current, reflectionNotes: { ...current.reflectionNotes, [dateKey]: note } })),
     };
   }, [ready, setColorScheme, state]);
 

@@ -6,6 +6,7 @@ import { ScreenHeader, SurfaceCard } from "@/components/palavra-viva-ui";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { useFaithJourney } from "@/hooks/use-faith-journey";
+import { syncDailyLiturgyNotifications } from "@/lib/liturgy-notifications";
 
 const DAYS = [{ label: "D", name: "Domingo", value: 0 }, { label: "S", name: "Segunda", value: 1 }, { label: "T", name: "Terça", value: 2 }, { label: "Q", name: "Quarta", value: 3 }, { label: "Q", name: "Quinta", value: 4 }, { label: "S", name: "Sexta", value: 5 }, { label: "S", name: "Sábado", value: 6 }];
 const TIMES = ["06:30", "07:30", "12:00", "20:30"];
@@ -14,6 +15,13 @@ export default function RemindersScreen() {
   const colors = useColors();
   const { reminderEnabled, reminderTime, reminderDays, setReminderSettings } = useFaithJourney();
   const [savedMessage, setSavedMessage] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+
+  const savePreferences = async () => {
+    const result = await syncDailyLiturgyNotifications({ enabled: reminderEnabled, time: reminderTime, days: reminderDays });
+    setSavedMessage(true);
+    setNotificationMessage(!result.supported ? "Salvo neste dispositivo. O agendamento do sistema funciona no app nativo." : result.granted ? "Notificação diária agendada." : "Permissão de notificação não concedida. Você pode ativá-la nos ajustes do aparelho.");
+  };
 
   const toggleDay = (day: number) => {
     const nextDays = reminderDays.includes(day) ? reminderDays.filter((item) => item !== day) : [...reminderDays, day].sort();
@@ -43,8 +51,9 @@ export default function RemindersScreen() {
           <Text style={[styles.daysCaption, { color: colors.muted }]}>{reminderDays.length === 7 ? "Todos os dias" : `${reminderDays.length} ${reminderDays.length === 1 ? "dia escolhido" : "dias escolhidos"}`}</Text>
         </SurfaceCard>
 
-        <View style={[styles.note, { backgroundColor: colors.primarySoft }]}><MaterialIcons name="info-outline" size={18} color={colors.primary} /><Text style={[styles.noteText, { color: colors.foreground }]}>No Preview, sua preferência fica salva neste dispositivo. As notificações do sistema serão ativadas na versão nativa.</Text></View>
-        <Pressable onPress={() => { setSavedMessage(true); }} accessibilityRole="button" accessibilityLabel="Salvar preferências" style={({ pressed }) => [styles.saveButton, { backgroundColor: colors.primary, opacity: pressed ? 0.75 : 1 }]}><Text style={styles.saveText}>{savedMessage ? "Preferências salvas" : "Salvar preferências"}</Text><MaterialIcons name={savedMessage ? "check" : "arrow-forward"} size={20} color="#FFF9F1" /></Pressable>
+        <View style={[styles.note, { backgroundColor: colors.primarySoft }]}><MaterialIcons name="info-outline" size={18} color={colors.primary} /><Text style={[styles.noteText, { color: colors.foreground }]}>No Preview, sua preferência fica salva neste dispositivo. No app nativo, o botão abaixo pede permissão e agenda o aviso nos dias escolhidos.</Text></View>
+        {notificationMessage ? <Text style={[styles.notificationMessage, { color: colors.primary }]}>{notificationMessage}</Text> : null}
+        <Pressable onPress={() => void savePreferences()} accessibilityRole="button" accessibilityLabel="Salvar preferências e agendar notificações" style={({ pressed }) => [styles.saveButton, { backgroundColor: colors.primary, opacity: pressed ? 0.75 : 1 }]}><Text style={styles.saveText}>{savedMessage ? "Preferências salvas" : "Salvar preferências"}</Text><MaterialIcons name={savedMessage ? "check" : "arrow-forward"} size={20} color="#FFF9F1" /></Pressable>
       </ScrollView>
     </ScreenContainer>
   );
@@ -71,6 +80,7 @@ const styles = StyleSheet.create({
   daysCaption: { fontSize: 12, marginTop: 13, textAlign: "center" },
   note: { flexDirection: "row", gap: 9, padding: 13, borderRadius: 15, marginBottom: 17 },
   noteText: { flex: 1, fontSize: 12, lineHeight: 18 },
+  notificationMessage: { fontSize: 12, lineHeight: 18, textAlign: "center", marginBottom: 11 },
   saveButton: { minHeight: 52, borderRadius: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9 },
   saveText: { color: "#FFF9F1", fontSize: 15, fontWeight: "800" },
 });

@@ -114,6 +114,7 @@ const config: ExpoConfig = {
     "expo-router",
     "@react-native-community/datetimepicker",
     "expo-sharing",
+    "expo-notifications",
     [
       "expo-audio",
       {

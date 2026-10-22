@@ -76,3 +76,19 @@
 ## Palavra do Dia dinâmica
 
 - [x] A tela Início escolhe a Palavra do Dia conforme a data local atual e atualiza automaticamente na virada do dia.
+
+
+## Reflexão e comentários do Evangelho
+
+- [x] A página `/liturgia` exibe uma reflexão diária contextual para o Evangelho, com uma pergunta de oração e campo de anotação pessoal por data.
+- [x] As anotações da reflexão ficam persistidas localmente e reaparecem quando o usuário retorna à mesma data.
+
+## Favoritos
+
+- [x] Cada leitura da Liturgia possui ação “Salvar”/“Salvo” para guardar leituras e versículos preferidos.
+- [x] A aba `/favorites` lista os favoritos persistidos, permite removê-los e oferece estado vazio orientando o usuário.
+
+## Notificações diárias
+
+- [x] A tela de Lembretes agenda notificações locais nativas da Liturgia nos dias e horário escolhidos, pedindo permissão ao salvar.
+- [x] O app cancela e recria os agendamentos ao salvar novas preferências; quando a permissão é negada, exibe uma orientação para os ajustes do aparelho.
