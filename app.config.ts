@@ -103,10 +103,17 @@ const config: ExpoConfig = {
     bundler: "metro",
     output: "static",
     favicon: "./assets/images/favicon.png",
+    name: "Palavra Viva — Liturgia e oração",
+    shortName: "Palavra Viva",
+    description: "Liturgia diária, oração e um caminho de fé para cada dia.",
+    themeColor: "#7B2635",
+    backgroundColor: "#FBF6EE",
   },
   plugins: [
     "expo-asset",
     "expo-router",
+    "@react-native-community/datetimepicker",
+    "expo-sharing",
     [
       "expo-audio",
       {

@@ -18,7 +18,7 @@ Criar um aplicativo móvel em português do Brasil para tornar a rotina diária 
 
 - `app/(tabs)/_layout.tsx`: barra inferior móvel com cinco destinos e ícones.
 - `app/(tabs)/index.tsx`: painel diário, Palavra do dia, progresso, sequência e missão do dia.
-- `app/(tabs)/liturgy.tsx`: leitura guiada da liturgia com navegação de data e ajuste de fonte.
+- `app/(tabs)/liturgia.tsx`: leitura guiada da liturgia com navegação de data e ajuste de fonte.
 - `app/(tabs)/prayers.tsx`: lista de orações expansíveis com ação “Rezei hoje”.
 - `app/(tabs)/rosary.tsx`: fluxo de terço com mistérios, contador de dezenas e conclusão.
 - `app/(tabs)/reminders.tsx`: preferências de horário e dias ativos para lembretes.
@@ -82,3 +82,9 @@ O wordmark usa “Palavra” em serif editorial e “Viva” em vinho, acompanha
 ### Cor proprietária
 
 **Vinho Palavra Viva — `#7B2635`**. É a cor de ação e reconhecimento da marca, usada com parcimônia para que cada chamada importante se destaque.
+
+## Atualização — Liturgia dinâmica e publicação
+
+- A tela canônica é `/liturgia` e consulta `https://liturgia.up.railway.app/v2/?dia=DD&mes=MM&ano=YYYY` com a data selecionada, usando `new Date()` como ponto de partida. A resposta v2 é normalizada para renderizar todas as formas de Primeira Leitura, Salmo, Segunda Leitura e Evangelho; o app preserva um fallback local apenas para indisponibilidade temporária do dia atual.
+- Cada leitura possui compartilhamento via `https://api.whatsapp.com/send?text=...`. O Evangelho também abre um modal vertical 9:16; no Web o PNG é gerado com `html2canvas`, e no nativo a captura usa `react-native-view-shot` e o compartilhamento do sistema.
+- As páginas `/politica-de-privacidade` e `/termos-de-uso` usam o mesmo componente editorial e ficam ligadas no rodapé da home. O Expo Web recebe `app/+html.tsx`, `public/manifest.json`, ícone de toque, metatags mobile e manifesto de rotas.

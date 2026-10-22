@@ -9,16 +9,16 @@ import { useColors } from "@/hooks/use-colors";
 import { useFaithJourney, type JourneyKey } from "@/hooks/use-faith-journey";
 import { useThemeContext } from "@/lib/theme-provider";
 
-const MISSIONS: { key: JourneyKey; title: string; caption: string; icon: React.ComponentProps<typeof MaterialIcons>["name"]; route: "/liturgy" | "/prayers" | "/rosary" }[] = [
-  { key: "liturgy", title: "Ler a liturgia", caption: "Um momento de escuta", icon: "menu-book", route: "/liturgy" },
+const MISSIONS: { key: JourneyKey; title: string; caption: string; icon: React.ComponentProps<typeof MaterialIcons>["name"]; route: "/liturgia" | "/prayers" | "/rosary" }[] = [
+  { key: "liturgy", title: "Ler a liturgia", caption: "Um momento de escuta", icon: "menu-book", route: "/liturgia" },
   { key: "prayer", title: "Fazer uma oração", caption: "Converse com Deus", icon: "volunteer-activism", route: "/prayers" },
   { key: "rosary", title: "Rezar o terço", caption: "Caminhe em oração", icon: "radio-button-checked", route: "/rosary" },
 ];
 
 export default function HomeScreen() {
   const colors = useColors();
-  const { colorScheme, setColorScheme } = useThemeContext();
-  const { completed, completedCount, progress, streak, prayerDays, ready } = useFaithJourney();
+  const { colorScheme } = useThemeContext();
+  const { completed, completedCount, progress, streak, prayerDays, ready, setThemePreference } = useFaithJourney();
   const dateLabel = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date());
 
   return (
@@ -30,7 +30,7 @@ export default function HomeScreen() {
             <Text style={[styles.brandName, { color: colors.foreground }]}>Palavra <Text style={{ color: colors.primary }}>Viva</Text></Text>
             <Text style={[styles.brandMeta, { color: colors.muted }]}>seu caminho diário de fé</Text>
           </View>
-          <Pressable onPress={() => setColorScheme(colorScheme === "dark" ? "light" : "dark")} accessibilityRole="button" accessibilityLabel="Alternar modo claro e escuro" style={[styles.themeButton, { backgroundColor: colors.primarySoft }]}>
+          <Pressable onPress={() => setThemePreference(colorScheme === "dark" ? "light" : "dark")} accessibilityRole="button" accessibilityLabel="Alternar modo claro e escuro" style={[styles.themeButton, { backgroundColor: colors.primarySoft }]}>
             <Text style={[styles.themeSymbol, { color: colors.primary }]}>{colorScheme === "dark" ? "☼" : "☾"}</Text>
           </Pressable>
         </View>
@@ -92,6 +92,14 @@ export default function HomeScreen() {
           <MaterialIcons name="format-quote" size={22} color={colors.gold} />
           <Text style={[styles.quoteStripText, { color: colors.muted }]}>A constância nasce de um gesto simples repetido com intenção.</Text>
         </View>
+        <View style={styles.legalFooter}>
+          <Text style={[styles.legalLabel, { color: colors.muted }]}>Informações legais</Text>
+          <View style={styles.legalLinks}>
+            <Pressable onPress={() => router.push("/politica-de-privacidade" as never)} accessibilityRole="link"><Text style={[styles.legalLink, { color: colors.primary }]}>Privacidade</Text></Pressable>
+            <Text style={[styles.legalDot, { color: colors.border }]}>·</Text>
+            <Pressable onPress={() => router.push("/termos-de-uso" as never)} accessibilityRole="link"><Text style={[styles.legalLink, { color: colors.primary }]}>Termos de uso</Text></Pressable>
+          </View>
+        </View>
       </ScrollView>
     </ScreenContainer>
   );
@@ -144,4 +152,9 @@ const styles = StyleSheet.create({
   missionCaption: { fontSize: 12, marginTop: 4 },
   quoteStrip: { borderTopWidth: 1, marginTop: 28, paddingTop: 16, flexDirection: "row", gap: 8, alignItems: "flex-start" },
   quoteStripText: { flex: 1, fontFamily: "serif", fontSize: 14, lineHeight: 20 },
+  legalFooter: { alignItems: "center", paddingTop: 24, paddingBottom: 8 },
+  legalLabel: { fontSize: 11, marginBottom: 7 },
+  legalLinks: { flexDirection: "row", alignItems: "center", gap: 8 },
+  legalLink: { fontSize: 12, fontWeight: "700" },
+  legalDot: { fontSize: 14 },
 });

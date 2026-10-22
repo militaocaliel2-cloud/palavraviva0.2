@@ -8,7 +8,7 @@ import { useColors } from "@/hooks/use-colors";
 
 const tabs = [
   { name: "index", title: "Início", icon: "home" },
-  { name: "liturgy", title: "Liturgia", icon: "menu-book" },
+  { name: "liturgia", title: "Liturgia", icon: "menu-book" },
   { name: "prayers", title: "Orações", icon: "favorite-border" },
   { name: "rosary", title: "Terço", icon: "radio-button-checked" },
   { name: "reminders", title: "Lembretes", icon: "notifications-none" },

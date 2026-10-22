@@ -43,3 +43,23 @@
 - [x] Botões e controles possuem rótulos acessíveis, estados selecionados e feedback visual claro.
 - [x] O progresso, sequência, dias de oração, itens concluídos e preferências são persistidos localmente e têm estrutura de dados pronta para sincronização no banco gerenciado.
 - [x] Os ícones nativos e assets de marca usam uma identidade quadrada própria do Palavra Viva.
+
+
+## Liturgia Diária dinâmica e completa
+
+- [x] A Liturgia Diária é buscada dinamicamente da API pública `https://liturgia.up.railway.app/v2/` usando `new Date()` e os parâmetros `dia`, `mes` e `ano`, atualizando automaticamente o conteúdo a cada dia.
+- [x] As leituras completas aparecem na tela, incluindo Primeira Leitura, Salmo com refrão, Segunda Leitura quando houver e Evangelho, suportando múltiplas formas retornadas pela API.
+- [x] Quando a API do dia atual estiver temporariamente indisponível, o app mantém uma experiência de fallback sem quebrar a tela; datas consultadas sem conteúdo exibem uma mensagem clara.
+
+## Compartilhamento da Liturgia
+
+- [x] Cada card de leitura apresenta o botão “Compartilhar no WhatsApp”, abrindo `api.whatsapp.com/send` com título/referência, trecho ou refrão e o link do app no final.
+- [x] O card do Evangelho apresenta “Gerar Imagem para Status/Stories” e abre um modal com prévia 9:16 contendo Palavra Viva, data, referência/trecho e URL do app.
+- [x] O modal oferece “Baixar Imagem” para gerar um PNG no Web e abrir o compartilhamento/salvamento nativo no celular.
+
+## UX, lojas e presença Web
+
+- [x] A página `/liturgia` oferece controles A−/A+, seletor de data, navegação por dias e retorno para Hoje.
+- [x] O app oferece modo claro/escuro persistente, com acessibilidade nos botões e estados selecionados visíveis.
+- [x] Existem as páginas `/politica-de-privacidade` e `/termos-de-uso`, com links acessíveis a partir do app.
+- [x] O Expo Web possui meta tags mobile, ícone de toque iOS/Android, `manifest.json`, modo standalone e orientação retrato.
