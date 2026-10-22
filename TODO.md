@@ -100,3 +100,10 @@
 - [x] Cada pergunta oferece alternativas de múltipla escolha, estado selecionado, correção visual e explicação após a resposta.
 - [x] O quiz exibe progresso, pontuação, resultado final e opção de refazer a rodada.
 - [x] A pontuação concluída é persistida por data para que o usuário veja o resultado do quiz daquele dia ao retornar.
+
+
+## Aplicativo Web/PWA por enquanto
+
+- [x] O mesmo projeto funciona como aplicativo Web responsivo em navegador móvel e desktop, sem remover a futura experiência nativa Expo.
+- [x] O conteúdo Web é limitado a uma largura confortável em telas grandes e permanece adaptável em viewport móvel.
+- [x] O PWA pode ser instalado em modo standalone, aceita orientação livre e oferece atalhos para Liturgia diária e Quiz do Dia.

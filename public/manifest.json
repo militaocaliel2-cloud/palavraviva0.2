@@ -6,7 +6,8 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "orientation": "portrait",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
   "background_color": "#FBF6EE",
   "theme_color": "#7B2635",
   "icons": [
@@ -14,6 +15,7 @@
     { "src": "/assets/images/favicon.png", "sizes": "256x256", "type": "image/png", "purpose": "any" }
   ],
   "shortcuts": [
-    { "name": "Liturgia diária", "short_name": "Liturgia", "url": "/liturgia", "icons": [{ "src": "/assets/images/favicon.png", "sizes": "256x256" }] }
+    { "name": "Liturgia diária", "short_name": "Liturgia", "url": "/liturgia", "icons": [{ "src": "/assets/images/favicon.png", "sizes": "256x256" }] },
+    { "name": "Quiz do Dia", "short_name": "Quiz", "url": "/quiz", "icons": [{ "src": "/assets/images/favicon.png", "sizes": "256x256" }] }
   ]
 }

@@ -93,3 +93,9 @@ O wordmark usa “Palavra” em serif editorial e “Viva” em vinho, acompanha
 - A Liturgia apresenta `getGospelReflection(date)` com comentário e pergunta de oração, além de um campo de anotação persistido por data no `FaithJourneyProvider`. Cada leitura pode ser salva com identificador de data/seção e a aba `/favorites` lista e remove os itens armazenados.
 - `expo-notifications` agenda um aviso local semanal para cada dia selecionado, no horário configurado em Lembretes. O botão de salvar cancela os agendamentos anteriores, solicita permissão nativa quando necessário e recria a programação; no Web a preferência permanece salva, mas o agendamento do sistema é indicado como recurso nativo.
 - A rota `/quiz` gera três perguntas com base na Liturgia v2 carregada no dia: referência do Evangelho, cor litúrgica e ordem das leituras. O estado de resposta, explicações, pontuação e resultado por data ficam no `FaithJourneyProvider`, e a home oferece um cartão de entrada para manter o quiz visível na jornada diária.
+
+
+## Atualização — entrega Web primeiro
+
+- O mesmo projeto Expo Router será entregue como PWA Web responsiva, com saída estática para navegador e instalação via `public/manifest.json`. A versão nativa continua preservada para uma etapa posterior; nenhum recurso de Liturgia, áudio, reflexão, favoritos, notificações, quiz ou páginas legais será removido.
+- O `ScreenContainer` limita a largura do conteúdo no Web para uma leitura confortável em desktop e mantém o layout de uso com uma mão em telas estreitas. O manifesto aceita orientação livre, oferece modo standalone e inclui atalhos para Liturgia e Quiz.
