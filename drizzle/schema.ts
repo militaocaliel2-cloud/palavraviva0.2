@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -25,4 +25,19 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+export const faithJourney = mysqlTable("faith_journey", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  journeyDate: varchar("journeyDate", { length: 10 }).notNull(),
+  streak: int("streak").default(0).notNull(),
+  prayerDays: int("prayerDays").default(0).notNull(),
+  completed: json("completed").$type<{ liturgy: boolean; prayer: boolean; rosary: boolean }>().notNull(),
+  reminderTime: varchar("reminderTime", { length: 5 }).default("07:30").notNull(),
+  reminderDays: json("reminderDays").$type<number[]>().notNull(),
+  themePreference: mysqlEnum("themePreference", ["system", "light", "dark"]).default("system").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FaithJourney = typeof faithJourney.$inferSelect;
+export type InsertFaithJourney = typeof faithJourney.$inferInsert;
