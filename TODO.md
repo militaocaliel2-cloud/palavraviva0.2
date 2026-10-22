@@ -92,3 +92,11 @@
 
 - [x] A tela de Lembretes agenda notificações locais nativas da Liturgia nos dias e horário escolhidos, pedindo permissão ao salvar.
 - [x] O app cancela e recria os agendamentos ao salvar novas preferências; quando a permissão é negada, exibe uma orientação para os ajustes do aparelho.
+
+
+## Quiz diário do Evangelho e da Liturgia
+
+- [x] A home oferece um acesso visível ao Quiz do Dia, e a rota `/quiz` apresenta três perguntas baseadas na Liturgia atual.
+- [x] Cada pergunta oferece alternativas de múltipla escolha, estado selecionado, correção visual e explicação após a resposta.
+- [x] O quiz exibe progresso, pontuação, resultado final e opção de refazer a rodada.
+- [x] A pontuação concluída é persistida por data para que o usuário veja o resultado do quiz daquele dia ao retornar.

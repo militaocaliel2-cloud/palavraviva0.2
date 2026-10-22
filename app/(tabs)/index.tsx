@@ -59,6 +59,12 @@ export default function HomeScreen() {
           <Text style={styles.wordReflection}>{dailyWord.reflection}</Text>
         </SurfaceCard>
 
+        <Pressable onPress={() => router.push("/quiz" as never)} accessibilityRole="button" accessibilityLabel="Abrir Quiz do Dia" style={({ pressed }) => [styles.quizCard, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.75 : 1 }]}>
+          <View style={[styles.quizIcon, { backgroundColor: colors.primarySoft }]}><MaterialIcons name="quiz" size={22} color={colors.primary} /></View>
+          <View style={styles.quizText}><Text style={[styles.quizEyebrow, { color: colors.primary }]}>DESAFIO DE HOJE</Text><Text style={[styles.quizTitle, { color: colors.foreground }]}>Quiz do Evangelho</Text><Text style={[styles.quizCaption, { color: colors.muted }]}>Três perguntas para guardar a Liturgia.</Text></View>
+          <MaterialIcons name="arrow-forward-ios" size={16} color={colors.muted} />
+        </Pressable>
+
         <SurfaceCard style={styles.progressCard}>
           <View style={styles.progressTopLine}>
             <View>
@@ -142,6 +148,12 @@ const styles = StyleSheet.create({
   reference: { color: "#F0D7B7", fontSize: 15, marginTop: 8 },
   wordDivider: { height: 1, backgroundColor: "#FFFFFF33", marginVertical: 18 },
   wordReflection: { color: "#F9EBDD", fontSize: 14, lineHeight: 21 },
+  quizCard: { minHeight: 78, borderRadius: 19, borderWidth: 1, padding: 13, flexDirection: "row", alignItems: "center", marginBottom: 14 },
+  quizIcon: { width: 48, height: 48, borderRadius: 17, alignItems: "center", justifyContent: "center" },
+  quizText: { flex: 1, marginHorizontal: 12 },
+  quizEyebrow: { fontSize: 9, fontWeight: "800", letterSpacing: 1.4 },
+  quizTitle: { fontSize: 16, fontWeight: "800", marginTop: 3 },
+  quizCaption: { fontSize: 12, marginTop: 4 },
   progressCard: { marginBottom: 25 },
   progressTopLine: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   cardEyebrow: { fontSize: 10, fontWeight: "800", letterSpacing: 1.6 },

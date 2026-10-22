@@ -6,6 +6,7 @@ import { useThemeContext } from "@/lib/theme-provider";
 export type JourneyKey = "liturgy" | "prayer" | "rosary";
 export type ThemePreference = "system" | "light" | "dark";
 export type FavoriteReading = { id: string; title: string; section: string; reference: string; text: string; dateLabel: string };
+export type QuizResult = { score: number; total: number; completedAt: string };
 
 type FaithState = {
   completed: Record<JourneyKey, boolean>;
@@ -18,6 +19,7 @@ type FaithState = {
   rosaryStep: number;
   favorites: FavoriteReading[];
   reflectionNotes: Record<string, string>;
+  quizResults: Record<string, QuizResult>;
 };
 
 type FaithJourneyContextValue = FaithState & {
@@ -32,6 +34,7 @@ type FaithJourneyContextValue = FaithState & {
   setReminderSettings: (settings: Partial<Pick<FaithState, "reminderEnabled" | "reminderTime" | "reminderDays">>) => void;
   toggleFavorite: (favorite: FavoriteReading) => void;
   setReflectionNote: (dateKey: string, note: string) => void;
+  saveQuizResult: (dateKey: string, result: QuizResult) => void;
 };
 
 const STORAGE_KEY = "palavra-viva-faith-journey-v1";
@@ -47,6 +50,7 @@ const DEFAULT_STATE: FaithState = {
   rosaryStep: 0,
   favorites: [],
   reflectionNotes: {},
+  quizResults: {},
 };
 
 const FaithJourneyContext = createContext<FaithJourneyContextValue | null>(null);
@@ -69,6 +73,7 @@ export function FaithJourneyProvider({ children }: { children: React.ReactNode }
               completed: { ...DEFAULT_STATE.completed, ...(saved.completed ?? {}) },
               favorites: Array.isArray(saved.favorites) ? saved.favorites : [],
               reflectionNotes: saved.reflectionNotes ?? {},
+              quizResults: saved.quizResults ?? {},
             };
             setState(nextState);
             if (nextState.themePreference !== "system") setColorScheme(nextState.themePreference);
@@ -135,6 +140,7 @@ export function FaithJourneyProvider({ children }: { children: React.ReactNode }
         return { ...current, favorites: exists ? current.favorites.filter((item) => item.id !== favorite.id) : [favorite, ...current.favorites] };
       }),
       setReflectionNote: (dateKey, note) => setState((current) => ({ ...current, reflectionNotes: { ...current.reflectionNotes, [dateKey]: note } })),
+      saveQuizResult: (dateKey, result) => setState((current) => ({ ...current, quizResults: { ...current.quizResults, [dateKey]: result } })),
     };
   }, [ready, setColorScheme, state]);
 
