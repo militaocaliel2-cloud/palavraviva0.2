@@ -35,9 +35,9 @@ export default function RootLayout() {
   const [insets, setInsets] = useState<EdgeInsets>(initialInsets);
   const [frame, setFrame] = useState<Rect>(initialFrame);
 
-  // Define a cor de fundo padrão do sistema para evitar flash claro ao abrir o app
+  // Define a cor de fundo padrão do sistema alinhada ao tema claro
   useEffect(() => {
-    SystemUI.setBackgroundColorAsync("#1E1014");
+    SystemUI.setBackgroundColorAsync("#F6EFE6");
     initManusRuntime();
   }, []);
 
@@ -93,7 +93,7 @@ export default function RootLayout() {
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="oauth/callback" />
             </Stack>
-            <StatusBar style="light" />
+            <StatusBar style="dark" />
           </FaithJourneyProvider>
         </QueryClientProvider>
       </trpc.Provider>
