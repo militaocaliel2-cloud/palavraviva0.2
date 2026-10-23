@@ -56,7 +56,7 @@ const config: ExpoConfig = {
   orientation: "portrait",
   icon: "./assets/images/icon.png",
   scheme: env.scheme,
-  userInterfaceStyle: "dark", // Força o modo escuro padrão desde a raiz
+  userInterfaceStyle: "light", // Retornado para o modo claro estável
   ios: {
     supportsTablet: true,
     bundleIdentifier: env.iosBundleId,
@@ -66,7 +66,7 @@ const config: ExpoConfig = {
   },
   android: {
     adaptiveIcon: {
-      backgroundColor: "#1E1014",
+      backgroundColor: "#7B2635",
       foregroundImage: "./assets/images/android-icon-foreground.png",
       backgroundImage: "./assets/images/android-icon-background.png",
       monochromeImage: "./assets/images/android-icon-monochrome.png",
@@ -95,8 +95,8 @@ const config: ExpoConfig = {
     name: "Palavra Viva — Liturgia e oração",
     shortName: "Palavra Viva",
     description: "Liturgia diária, oração e um caminho de fé para cada dia.",
-    themeColor: "#1E1014",
-    backgroundColor: "#1E1014", // Fundo web alinhado ao tema escuro
+    themeColor: "#70253A",
+    backgroundColor: "#F6EFE6", // Fundo claro original estável
   },
   plugins: [
     "expo-asset",
@@ -123,9 +123,9 @@ const config: ExpoConfig = {
         image: "./assets/images/splash-icon.png",
         imageWidth: 200,
         resizeMode: "contain",
-        backgroundColor: "#1E1014", // Corrigido para remover o flash branco inicial
+        backgroundColor: "#F6EFE6", // Fundo claro original para o splash
         dark: {
-          backgroundColor: "#1E1014",
+          backgroundColor: "#F6EFE6",
         },
       },
     ],
