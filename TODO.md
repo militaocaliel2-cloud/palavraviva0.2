@@ -114,3 +114,4 @@
 - [x] O fundo global, as superfícies e os botões foram atualizados com a nova identidade visual marfim, bordô e dourado, incluindo estados de pressão, contraste e sombra leve.
 - [x] A página `/configuracoes` permite escolher tema Sistema, Claro ou Escuro, alternar lembretes, abrir Favoritos e Liturgia e acessar Política de Privacidade e Termos de Uso.
 - [x] A home oferece acesso visível à página Configurações, e a rota foi adicionada ao manifesto Web.
+- [x] A página Configurações possui botão de voltar, e os textos sobre fundos primários usam contraste responsivo nos temas claro e escuro.

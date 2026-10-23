@@ -18,10 +18,10 @@ export default function RosaryScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <ScreenHeader eyebrow="Respirar e permanecer" title="Terço" subtitle="Um passo de cada vez, sem pressa." action={<MaterialIcons name="radio-button-checked" size={30} color={colors.gold} />} />
         <SurfaceCard style={[styles.rosaryCard, { backgroundColor: colors.primary, borderColor: colors.primary }]}>
-          <View style={styles.rosaryTop}><View><Text style={styles.rosaryLabel}>CAMINHO DE ORAÇÃO</Text><Text style={styles.rosaryTitle}>{isFinished ? "Terço concluído" : mystery.title}</Text></View><ProgressRing progress={rosaryStep / ROSARY_MYSTERIES.length} size={74} /></View>
-          <Text style={styles.rosaryPrayer}>{isFinished ? "Que a paz desta oração acompanhe o restante do seu dia." : mystery.prayer}</Text>
+          <View style={styles.rosaryTop}><View><Text style={styles.rosaryLabel}>CAMINHO DE ORAÇÃO</Text><Text style={[styles.rosaryTitle, { color: colors.onPrimary }]}>{isFinished ? "Terço concluído" : mystery.title}</Text></View><ProgressRing progress={rosaryStep / ROSARY_MYSTERIES.length} size={74} /></View>
+          <Text style={[styles.rosaryPrayer, { color: colors.onPrimary }]}>{isFinished ? "Que a paz desta oração acompanhe o restante do seu dia." : mystery.prayer}</Text>
           <View style={styles.stepTrack}>{ROSARY_MYSTERIES.map((step) => <View key={step.id} style={[styles.stepDot, { backgroundColor: step.id <= rosaryStep ? colors.gold : "#FFFFFF55" }]} />)}</View>
-          <Text style={styles.stepCaption}>{isFinished ? "6 de 6 momentos concluídos" : `${rosaryStep} de ${ROSARY_MYSTERIES.length} momentos concluídos`}</Text>
+          <Text style={[styles.stepCaption, { color: colors.onPrimary }]}>{isFinished ? "6 de 6 momentos concluídos" : `${rosaryStep} de ${ROSARY_MYSTERIES.length} momentos concluídos`}</Text>
         </SurfaceCard>
 
         {!isFinished ? <SurfaceCard style={styles.intentionCard} accent={colors.gold}><Text style={[styles.intentionEyebrow, { color: colors.primary }]}>INTENÇÃO DE HOJE</Text><Text style={[styles.intentionText, { color: colors.foreground }]}>Por quem ou por qual situação você deseja rezar?</Text><View style={[styles.line, { borderBottomColor: colors.border }]} /></SurfaceCard> : null}
@@ -41,11 +41,11 @@ const styles = StyleSheet.create({
   rosaryCard: { padding: 20, marginBottom: 13 },
   rosaryTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   rosaryLabel: { color: "#E8C98B", fontSize: 10, fontWeight: "800", letterSpacing: 1.7 },
-  rosaryTitle: { color: "#FFF9F1", fontFamily: "serif", fontSize: 26, fontWeight: "700", marginTop: 10, maxWidth: 200 },
-  rosaryPrayer: { color: "#F9EBDD", fontSize: 15, lineHeight: 23, marginTop: 20 },
+  rosaryTitle: { fontFamily: "serif", fontSize: 26, fontWeight: "700", marginTop: 10, maxWidth: 200 },
+  rosaryPrayer: { fontSize: 15, lineHeight: 23, marginTop: 20 },
   stepTrack: { flexDirection: "row", gap: 6, marginTop: 22 },
   stepDot: { height: 6, borderRadius: 6, flex: 1 },
-  stepCaption: { color: "#F0D7B7", fontSize: 12, marginTop: 8 },
+  stepCaption: { fontSize: 12, marginTop: 8 },
   intentionCard: { padding: 18, marginBottom: 17 },
   intentionEyebrow: { fontSize: 10, fontWeight: "800", letterSpacing: 1.5 },
   intentionText: { fontFamily: "serif", fontSize: 18, lineHeight: 25, marginTop: 9 },

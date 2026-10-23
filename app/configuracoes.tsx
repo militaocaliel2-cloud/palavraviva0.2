@@ -26,7 +26,7 @@ export default function SettingsScreen() {
           eyebrow="Seu espaço pessoal"
           title="Configurações"
           subtitle="Ajuste o Palavra Viva para caber no seu ritmo."
-          action={<View style={[styles.headerIcon, { backgroundColor: colors.primarySoft }]}><MaterialIcons name="tune" size={24} color={colors.primary} /></View>}
+          action={<Pressable onPress={() => router.canGoBack() ? router.back() : router.replace("/")} accessibilityRole="button" accessibilityLabel="Voltar" style={({ pressed }) => [styles.backButton, { backgroundColor: colors.primarySoft, opacity: pressed ? 0.68 : 1 }]}><MaterialIcons name="arrow-back" size={19} color={colors.primary} /><Text style={[styles.backText, { color: colors.primary }]}>Voltar</Text></Pressable>}
         />
 
         <Text style={[styles.sectionLabel, { color: colors.primary }]}>APARÊNCIA</Text>
@@ -50,8 +50,8 @@ export default function SettingsScreen() {
                   accessibilityLabel={`Tema ${option.label}`}
                   style={[styles.themeOption, { backgroundColor: selected ? colors.primary : colors.background, borderColor: selected ? colors.primary : colors.border }]}
                 >
-                  <MaterialIcons name={option.icon} size={18} color={selected ? "#FFF9F1" : colors.muted} />
-                  <Text style={[styles.themeLabel, { color: selected ? "#FFF9F1" : colors.foreground }]}>{option.label}</Text>
+                  <MaterialIcons name={option.icon} size={18} color={selected ? colors.onPrimary : colors.muted} />
+                  <Text style={[styles.themeLabel, { color: selected ? colors.onPrimary : colors.foreground }]}>{option.label}</Text>
                 </Pressable>
               );
             })}
@@ -94,7 +94,8 @@ function SettingRow({ icon, title, caption, colors, trailing, onPress }: { icon:
 
 const styles = StyleSheet.create({
   content: { paddingHorizontal: 18, paddingTop: 22, paddingBottom: 36 },
-  headerIcon: { width: 46, height: 46, borderRadius: 15, alignItems: "center", justifyContent: "center" },
+  backButton: { minHeight: 42, borderRadius: 14, paddingHorizontal: 11, flexDirection: "row", alignItems: "center", gap: 5 },
+  backText: { fontSize: 12, fontWeight: "800" },
   sectionLabel: { fontSize: 10, fontWeight: "800", letterSpacing: 1.7, marginBottom: 9, marginTop: 6 },
   card: { padding: 16, marginBottom: 18 },
   cardHeading: { flexDirection: "row", alignItems: "center" },

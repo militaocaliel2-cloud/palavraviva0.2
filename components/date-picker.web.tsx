@@ -29,7 +29,7 @@ export function DatePicker({ visible, value, onChange, onClose }: DatePickerProp
         <Text style={[styles.eyebrow, { color: colors.primary }]}>ESCOLHER DATA</Text>
         <Text style={[styles.title, { color: colors.foreground }]}>Consultar outra liturgia</Text>
         <View style={styles.inputWrap}>{input}</View>
-        <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel="Concluir escolha da data" style={[styles.done, { backgroundColor: colors.primary }]}><Text style={styles.doneText}>Concluído</Text></Pressable>
+        <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel="Concluir escolha da data" style={[styles.done, { backgroundColor: colors.primary }]}><Text style={[styles.doneText, { color: colors.onPrimary }]}>Concluído</Text></Pressable>
       </View>
     </View>
   </Modal>;
@@ -42,5 +42,5 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontFamily: "serif", fontWeight: "700", marginTop: 6, marginBottom: 18 },
   inputWrap: { marginBottom: 14 },
   done: { borderRadius: 13, paddingVertical: 13, alignItems: "center" },
-  doneText: { color: "#FFF9F1", fontSize: 14, fontWeight: "800" },
+  doneText: { fontSize: 14, fontWeight: "800" },
 });

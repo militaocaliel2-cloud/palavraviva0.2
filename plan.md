@@ -101,3 +101,4 @@ O wordmark usa “Palavra” em serif editorial e “Viva” em vinho, acompanha
 - O `ScreenContainer` limita a largura do conteúdo no Web para uma leitura confortável em desktop e mantém o layout de uso com uma mão em telas estreitas. O manifesto aceita orientação livre, oferece modo standalone e inclui atalhos para Liturgia e Quiz.
 - O arquivo `vercel.json` fixa a instalação com pnpm, a exportação `npx expo export --platform web` e a pasta publicada `dist`, deixando o repositório pronto para importação na Vercel pela branch `main`.
 - A identidade visual usa um fundo marfim mais profundo, superfícies claras e botões de cantos menores com sombra sutil. A rota `/configuracoes` centraliza tema, lembretes, favoritos e links legais, com acesso pelo botão de ajustes na home.
+- A página Configurações inclui retorno explícito para a tela anterior, e textos sobre superfícies primárias usam o token responsivo `onPrimary` para manter contraste correto em tema claro e escuro.

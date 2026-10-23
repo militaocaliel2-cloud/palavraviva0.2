@@ -1,6 +1,7 @@
 /** @type {const} */
 const themeColors = {
   primary: { light: '#70253A', dark: '#D99AA1' },
+  onPrimary: { light: '#FFF9F1', dark: '#2E1B1F' },
   primarySoft: { light: '#F0DED9', dark: '#43272F' },
   gold: { light: '#B27A2C', dark: '#E8BE70' },
   background: { light: '#F6EFE6', dark: '#1D171A' },

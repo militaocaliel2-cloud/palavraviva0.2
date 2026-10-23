@@ -187,13 +187,13 @@ export default function LiturgyScreen() {
           <View style={[styles.modalSheet, { backgroundColor: colors.background }]}>
             <View style={styles.modalHeader}><View><Text style={[styles.modalEyebrow, { color: colors.primary }]}>PRONTO PARA COMPARTILHAR</Text><Text style={[styles.modalTitle, { color: colors.foreground }]}>Card para Status/Stories</Text></View><Pressable onPress={() => setShareModalVisible(false)} accessibilityRole="button" accessibilityLabel="Fechar prévia"><MaterialIcons name="close" size={24} color={colors.muted} /></Pressable></View>
             <View ref={cardRef} collapsable={false} style={[styles.shareCard, { backgroundColor: colors.primary }]}>
-              <View style={styles.shareCardTop}><Text style={styles.shareBrand}>Palavra Viva</Text><Text style={styles.shareMark}>✦</Text></View>
+              <View style={styles.shareCardTop}><Text style={[styles.shareBrand, { color: colors.onPrimary }]}>Palavra Viva</Text><Text style={styles.shareMark}>✦</Text></View>
               <Text style={styles.shareDate}>{dateLabel}</Text>
               <View style={styles.shareRule} />
               <Text style={styles.shareLabel}>EVANGELHO</Text>
-              <Text style={styles.shareReference}>{gospel?.referencia ?? "Palavra do dia"}</Text>
-              <Text style={styles.shareQuote}>{gospel?.texto ?? "A Palavra de Deus ilumina o caminho de hoje."}</Text>
-              <View style={styles.shareFooter}><Text style={styles.shareFooterText}>Leia a liturgia completa em</Text><Text style={styles.shareUrl}>palavra-viva-drab.vercel.app</Text></View>
+              <Text style={[styles.shareReference, { color: colors.onPrimary }]}>{gospel?.referencia ?? "Palavra do dia"}</Text>
+              <Text style={[styles.shareQuote, { color: colors.onPrimary }]}>{gospel?.texto ?? "A Palavra de Deus ilumina o caminho de hoje."}</Text>
+              <View style={styles.shareFooter}><Text style={[styles.shareFooterText, { color: colors.onPrimary }]}>Leia a liturgia completa em</Text><Text style={[styles.shareUrl, { color: colors.onPrimary }]}>palavra-viva-drab.vercel.app</Text></View>
             </View>
             <View style={styles.modalActions}><PrimaryButton variant="outline" onPress={() => setShareModalVisible(false)}>Fechar</PrimaryButton><PrimaryButton icon="download" onPress={downloadCard}>Baixar Imagem</PrimaryButton></View>
           </View>
@@ -280,15 +280,15 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 21, fontFamily: "serif", fontWeight: "700", marginTop: 4 },
   shareCard: { width: "100%", aspectRatio: 9 / 16, borderRadius: 16, padding: 22, justifyContent: "space-between", overflow: "hidden" },
   shareCardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  shareBrand: { color: "#FFF9F1", fontFamily: "serif", fontSize: 20, fontWeight: "700" },
+  shareBrand: { fontFamily: "serif", fontSize: 20, fontWeight: "700" },
   shareMark: { color: "#E7BC6A", fontSize: 24 },
   shareDate: { color: "#F0D7B7", fontSize: 11, textTransform: "capitalize", marginTop: 12 },
   shareRule: { height: 1, backgroundColor: "#FFFFFF44", marginVertical: 18 },
   shareLabel: { color: "#E7BC6A", fontSize: 10, letterSpacing: 1.7, fontWeight: "800" },
-  shareReference: { color: "#FFF9F1", fontFamily: "serif", fontSize: 23, fontWeight: "700", marginTop: 9 },
-  shareQuote: { color: "#F9EBDD", fontFamily: "serif", fontSize: 17, lineHeight: 25, marginTop: 16 },
+  shareReference: { fontFamily: "serif", fontSize: 23, fontWeight: "700", marginTop: 9 },
+  shareQuote: { fontFamily: "serif", fontSize: 17, lineHeight: 25, marginTop: 16 },
   shareFooter: { borderTopWidth: 1, borderTopColor: "#FFFFFF44", paddingTop: 12 },
-  shareFooterText: { color: "#F0D7B7", fontSize: 10 },
-  shareUrl: { color: "#FFF9F1", fontSize: 10, fontWeight: "700", marginTop: 3 },
+  shareFooterText: { fontSize: 10 },
+  shareUrl: { fontSize: 10, fontWeight: "700", marginTop: 3 },
   modalActions: { flexDirection: "row", gap: 9, marginTop: 14 },
 });

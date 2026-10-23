@@ -42,7 +42,7 @@ export default function RemindersScreen() {
         <Text style={[styles.sectionLabel, { color: colors.primary }]}>HORÁRIO</Text>
         <SurfaceCard style={styles.timeCard}>
           <View style={styles.timeIntro}><MaterialIcons name="schedule" size={22} color={colors.gold} /><Text style={[styles.timeIntroText, { color: colors.foreground }]}>Um toque para lembrar que hoje também pode ter espaço para oração.</Text></View>
-          <View style={styles.timeOptions}>{TIMES.map((time) => <Pressable key={time} onPress={() => { setReminderSettings({ reminderTime: time }); setSavedMessage(false); }} accessibilityRole="radio" accessibilityState={{ selected: reminderTime === time }} accessibilityLabel={`Escolher ${time}`} style={[styles.timeOption, { backgroundColor: reminderTime === time ? colors.primary : colors.background, borderColor: reminderTime === time ? colors.primary : colors.border }]}><Text style={[styles.timeText, { color: reminderTime === time ? "#FFF9F1" : colors.foreground }]}>{time}</Text></Pressable>)}</View>
+          <View style={styles.timeOptions}>{TIMES.map((time) => <Pressable key={time} onPress={() => { setReminderSettings({ reminderTime: time }); setSavedMessage(false); }} accessibilityRole="radio" accessibilityState={{ selected: reminderTime === time }} accessibilityLabel={`Escolher ${time}`} style={[styles.timeOption, { backgroundColor: reminderTime === time ? colors.primary : colors.background, borderColor: reminderTime === time ? colors.primary : colors.border }]}><Text style={[styles.timeText, { color: reminderTime === time ? colors.onPrimary : colors.foreground }]}>{time}</Text></Pressable>)}</View>
         </SurfaceCard>
 
         <Text style={[styles.sectionLabel, { color: colors.primary }]}>DIAS DA SEMANA</Text>
@@ -53,7 +53,7 @@ export default function RemindersScreen() {
 
         <View style={[styles.note, { backgroundColor: colors.primarySoft }]}><MaterialIcons name="info-outline" size={18} color={colors.primary} /><Text style={[styles.noteText, { color: colors.foreground }]}>No Preview, sua preferência fica salva neste dispositivo. No app nativo, o botão abaixo pede permissão e agenda o aviso nos dias escolhidos.</Text></View>
         {notificationMessage ? <Text style={[styles.notificationMessage, { color: colors.primary }]}>{notificationMessage}</Text> : null}
-        <Pressable onPress={() => void savePreferences()} accessibilityRole="button" accessibilityLabel="Salvar preferências e agendar notificações" style={({ pressed }) => [styles.saveButton, { backgroundColor: colors.primary, opacity: pressed ? 0.75 : 1 }]}><Text style={styles.saveText}>{savedMessage ? "Preferências salvas" : "Salvar preferências"}</Text><MaterialIcons name={savedMessage ? "check" : "arrow-forward"} size={20} color="#FFF9F1" /></Pressable>
+        <Pressable onPress={() => void savePreferences()} accessibilityRole="button" accessibilityLabel="Salvar preferências e agendar notificações" style={({ pressed }) => [styles.saveButton, { backgroundColor: colors.primary, opacity: pressed ? 0.75 : 1 }]}><Text style={[styles.saveText, { color: colors.onPrimary }]}>{savedMessage ? "Preferências salvas" : "Salvar preferências"}</Text><MaterialIcons name={savedMessage ? "check" : "arrow-forward"} size={20} color={colors.onPrimary} /></Pressable>
       </ScrollView>
     </ScreenContainer>
   );
@@ -82,5 +82,5 @@ const styles = StyleSheet.create({
   noteText: { flex: 1, fontSize: 12, lineHeight: 18 },
   notificationMessage: { fontSize: 12, lineHeight: 18, textAlign: "center", marginBottom: 11 },
   saveButton: { minHeight: 52, borderRadius: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9 },
-  saveText: { color: "#FFF9F1", fontSize: 15, fontWeight: "800" },
+  saveText: { fontSize: 15, fontWeight: "800" },
 });

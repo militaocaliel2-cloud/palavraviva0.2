@@ -25,7 +25,7 @@ export function SurfaceCard({ children, style, accent }: { children: React.React
 export function PrimaryButton({ children, onPress, icon, variant = "primary", style, accessibilityLabel, disabled }: PressableProps & { children: React.ReactNode; icon?: React.ComponentProps<typeof MaterialIcons>["name"]; variant?: "primary" | "soft" | "outline"; style?: StyleProp<ViewStyle> }) {
   const colors = useColors();
   const backgroundColor = variant === "primary" ? colors.primary : variant === "soft" ? colors.primarySoft : "transparent";
-  const foregroundColor = variant === "primary" ? "#FFF9F1" : colors.primary;
+  const foregroundColor = variant === "primary" ? colors.onPrimary : colors.primary;
   return (
     <Pressable
       {...{ onPress, disabled, accessibilityLabel }}

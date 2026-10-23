@@ -58,10 +58,10 @@ export default function HomeScreen() {
             <Text style={styles.wordLabel}>PALAVRA DO DIA</Text>
             <MaterialIcons name="flare" size={18} color={colors.gold} />
           </View>
-          <Text style={styles.quote}>“{dailyWord.quote}”</Text>
-          <Text style={styles.reference}>— {dailyWord.reference}</Text>
+          <Text style={[styles.quote, { color: colors.onPrimary }]}>“{dailyWord.quote}”</Text>
+          <Text style={[styles.reference, { color: colors.onPrimary }]}>— {dailyWord.reference}</Text>
           <View style={styles.wordDivider} />
-          <Text style={styles.wordReflection}>{dailyWord.reflection}</Text>
+          <Text style={[styles.wordReflection, { color: colors.onPrimary }]}>{dailyWord.reflection}</Text>
         </SurfaceCard>
 
         <Pressable onPress={() => router.push("/quiz" as never)} accessibilityRole="button" accessibilityLabel="Abrir Quiz do Dia" style={({ pressed }) => [styles.quizCard, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.75 : 1 }]}>
@@ -151,10 +151,10 @@ const styles = StyleSheet.create({
   wordCard: { padding: 20, marginBottom: 14 },
   wordLabelRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   wordLabel: { color: "#E8C98B", fontSize: 10, fontWeight: "800", letterSpacing: 1.8 },
-  quote: { color: "#FFF9F1", fontFamily: "serif", fontSize: 27, lineHeight: 34, marginTop: 18 },
-  reference: { color: "#F0D7B7", fontSize: 15, marginTop: 8 },
+  quote: { fontFamily: "serif", fontSize: 27, lineHeight: 34, marginTop: 18 },
+  reference: { fontSize: 15, marginTop: 8 },
   wordDivider: { height: 1, backgroundColor: "#FFFFFF33", marginVertical: 18 },
-  wordReflection: { color: "#F9EBDD", fontSize: 14, lineHeight: 21 },
+  wordReflection: { fontSize: 14, lineHeight: 21 },
   quizCard: { minHeight: 78, borderRadius: 19, borderWidth: 1, padding: 13, flexDirection: "row", alignItems: "center", marginBottom: 14 },
   quizIcon: { width: 48, height: 48, borderRadius: 17, alignItems: "center", justifyContent: "center" },
   quizText: { flex: 1, marginHorizontal: 12 },
