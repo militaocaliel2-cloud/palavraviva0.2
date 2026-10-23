@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
   modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 },
   modalEyebrow: { fontSize: 10, fontWeight: "800", letterSpacing: 1.3 },
   modalTitle: { fontSize: 21, fontFamily: "serif", fontWeight: "700", marginTop: 4 },
-  shareCardSquare: { width: "100%", aspectRatio: 1 / 1.05, borderRadius: 18, padding: 18, justifyContent: "space-between", overflow: "hidden" },
+  shareCardSquare: { width: "100%", aspectRatio: 1 / 1.05, borderRadius: 28, padding: 18, justifyContent: "space-between", overflow: "hidden" },
   shareCardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   shareBrand: { fontFamily: "serif", fontSize: 18, fontWeight: "700" },
   shareMark: { color: "#E7BC6A", fontSize: 20 },
