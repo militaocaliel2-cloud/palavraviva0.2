@@ -1,7 +1,7 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { ScrollView, StyleSheet, Text, View, Pressable, Modal, Platform } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View, Pressable, Modal, Platform } from "react-native";
 import { captureRef } from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
 
@@ -13,6 +13,11 @@ import { useFaithJourney, type JourneyKey } from "@/hooks/use-faith-journey";
 import { useThemeContext } from "@/lib/theme-provider";
 
 const APP_URL = "https://palavra-viva-drab.vercel.app/";
+
+// Largura final da imagem exportada (ideal para Status/Stories) e proporção do card (largura : altura = 1 : 1.05)
+const EXPORT_WIDTH = 1080;
+const CARD_HEIGHT_RATIO = 1.05;
+const FILE_NAME = "palavra-viva-do-dia.png";
 
 const MISSIONS: { key: JourneyKey; title: string; caption: string; icon: React.ComponentProps<typeof MaterialIcons>["name"]; route: "/liturgia" | "/prayers" | "/rosary" }[] = [
   { key: "liturgy", title: "Ler a liturgia", caption: "Um momento de escuta", icon: "menu-book", route: "/liturgia" },
@@ -26,7 +31,10 @@ export default function HomeScreen() {
   const { completed, completedCount, progress, streak, prayerDays, ready, setThemePreference } = useFaithJourney();
   const [today, setToday] = useState(() => new Date());
   const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [imageReady, setImageReady] = useState(Platform.OS !== "web");
   const cardRef = useRef<View>(null);
+  const webFileRef = useRef<File | null>(null);
 
   const dailyWord = getDailyWord(today);
   const dateLabel = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(today);
@@ -39,45 +47,117 @@ export default function HomeScreen() {
     return () => clearInterval(timer);
   }, []);
 
-  // Função otimizada com suporte ao menu de compartilhamento nativo do celular na Web
-  const downloadCard = async () => {
-    if (!cardRef.current) return;
-    if (Platform.OS === "web") {
-      const html2canvas = (await import("html2canvas")).default;
-      const canvas = await html2canvas(cardRef.current as unknown as HTMLElement, { scale: 2, useCORS: true, backgroundColor: null });
-      
-      canvas.toBlob(async (blob) => {
-        if (!blob) return;
-        const file = new File([blob], "palavra-viva-do-dia.png", { type: "image/png" });
+  // WEB: gera a imagem em segundo plano assim que o modal abre.
+  // Assim o botão só precisa chamar navigator.share() de imediato, sem nenhum await antes,
+  // mantendo o "gesto do usuário" exigido pelo Safari/iOS e Chrome mobile.
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
 
-        // Se o navegador do celular suportar compartilhamento de arquivos nativo, abre o menu do celular
-        if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
-          try {
-            await navigator.share({
-              files: [file],
-              title: "Palavra Viva",
-              text: "Confira a Palavra do Dia de hoje!",
-            });
-            return;
-          } catch (err) {
-            if ((err as Error).name !== "AbortError") {
-              console.log("Compartilhamento cancelado ou não suportado", err);
-            }
-          }
-        }
-
-        // Fallback: se não suportar o menu nativo, faz o download direto via link
-        const link = document.createElement("a");
-        link.download = "palavra-viva-do-dia.png";
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-      }, "image/png");
+    if (!shareModalVisible) {
+      webFileRef.current = null;
+      setImageReady(false);
       return;
     }
 
-    const uri = await captureRef(cardRef, { format: "png", quality: 1, result: "tmpfile" });
-    if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(uri, { mimeType: "image/png", dialogTitle: "Salvar card da Palavra Viva" });
+    let cancelled = false;
+    setImageReady(false);
+
+    // Espera a animação de fade do modal terminar antes de capturar
+    const timer = setTimeout(async () => {
+      try {
+        const el = cardRef.current as unknown as HTMLElement | null;
+        if (!el) return;
+
+        const html2canvas = (await import("html2canvas")).default;
+        const width = el.offsetWidth || 340;
+        const canvas = await html2canvas(el, {
+          scale: Math.max(2, EXPORT_WIDTH / width),
+          useCORS: true,
+          backgroundColor: null,
+          scrollX: 0,
+          scrollY: 0,
+        });
+
+        const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+        if (blob && !cancelled) {
+          webFileRef.current = new File([blob], FILE_NAME, { type: "image/png" });
+          setImageReady(true);
+        }
+      } catch (err) {
+        console.log("Erro ao gerar imagem", err);
+      }
+    }, 350);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [shareModalVisible, dailyWord.quote, dailyWord.reference]);
+
+  const downloadCard = async () => {
+    if (saving) return;
+
+    // ---------- WEB ----------
+    if (Platform.OS === "web") {
+      const file = webFileRef.current;
+      if (!file) return; // imagem ainda sendo gerada
+
+      // IMPORTANTE: nenhum await antes do share, para manter o gesto do usuário
+      if (typeof navigator !== "undefined" && navigator.canShare?.({ files: [file] }) && navigator.share) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: "Palavra Viva",
+            text: "Confira a Palavra do Dia de hoje!",
+          });
+          return;
+        } catch (err) {
+          // Usuário cancelou o menu de compartilhar: não baixa nada
+          if ((err as Error).name === "AbortError") return;
+          console.log("Compartilhamento não suportado, usando download direto", err);
+        }
+      }
+
+      // Fallback: download direto (mais leve que toDataURL)
+      const url = URL.createObjectURL(file);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = file.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      return;
+    }
+
+    // ---------- NATIVO (iOS/Android) ----------
+    try {
+      setSaving(true);
+      const uri = await captureRef(cardRef, {
+        format: "png",
+        quality: 1,
+        result: "tmpfile",
+        width: EXPORT_WIDTH,
+        height: Math.round(EXPORT_WIDTH * CARD_HEIGHT_RATIO),
+      });
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, {
+          mimeType: "image/png",
+          UTI: "public.png",
+          dialogTitle: "Salvar card da Palavra Viva",
+        });
+      } else {
+        console.log("Compartilhamento não disponível neste dispositivo");
+      }
+    } catch (err) {
+      console.log("Erro ao compartilhar", err);
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const downloadDisabled = saving || !imageReady;
 
   return (
     <ScreenContainer>
@@ -112,7 +192,7 @@ export default function HomeScreen() {
           <Text style={[styles.wordReflection, { color: colors.onPrimary }]}>{dailyWord.reflection}</Text>
 
           {/* Botão para abrir a modal de geração de imagem */}
-          <Pressable 
+          <Pressable
             onPress={() => setShareModalVisible(true)}
             accessibilityRole="button"
             accessibilityLabel="Gerar imagem da Palavra do Dia"
@@ -217,26 +297,36 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            {/* Botões do Modal com Pressable nativo */}
+            {/* Botões do Modal */}
             <View style={styles.modalActions}>
-              <Pressable 
-                onPress={() => setShareModalVisible(false)} 
+              <Pressable
+                onPress={() => setShareModalVisible(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Fechar"
                 style={({ pressed }) => [styles.modalCloseButton, { opacity: pressed ? 0.7 : 1 }]}
               >
                 <Text style={[styles.modalCloseText, { color: colors.foreground }]}>Fechar</Text>
               </Pressable>
 
-              <Pressable 
-                onPress={downloadCard} 
+              <Pressable
+                onPress={downloadCard}
+                disabled={downloadDisabled}
                 accessibilityRole="button"
                 accessibilityLabel="Baixar ou compartilhar imagem"
+                accessibilityState={{ disabled: downloadDisabled, busy: downloadDisabled }}
                 style={({ pressed }) => [
-                  styles.modalDownloadButton, 
-                  { backgroundColor: colors.primary, opacity: pressed ? 0.8 : 1 }
+                  styles.modalDownloadButton,
+                  { backgroundColor: colors.primary, opacity: downloadDisabled ? 0.6 : pressed ? 0.8 : 1 },
                 ]}
               >
-                <MaterialIcons name="share" size={18} color={colors.onPrimary} />
-                <Text style={[styles.modalDownloadText, { color: colors.onPrimary }]}>Salvar / Compartilhar</Text>
+                {downloadDisabled ? (
+                  <ActivityIndicator size="small" color={colors.onPrimary} />
+                ) : (
+                  <MaterialIcons name="share" size={18} color={colors.onPrimary} />
+                )}
+                <Text style={[styles.modalDownloadText, { color: colors.onPrimary }]}>
+                  {downloadDisabled ? "Preparando..." : "Salvar / Compartilhar"}
+                </Text>
               </Pressable>
             </View>
           </View>
