@@ -3,9 +3,6 @@ import "./scripts/load-env.js";
 import type { ExpoConfig } from "expo/config";
 
 // Bundle ID format: space.manus.<project_name_dots>.<timestamp>
-// e.g., "my-app" created at 2024-01-15 10:30:45 -> "space.manus.my.app.t20240115103045"
-// Bundle ID can only contain letters, numbers, and dots
-// Android requires each dot-separated segment to start with a letter
 const rawBundleId = "space.manus.palavraviva.t033991349166244";
 const bundleId =
   rawBundleId
@@ -16,30 +13,22 @@ const bundleId =
     .toLowerCase()
     .split(".")
     .map((segment) => {
-      // Android requires each segment to start with a letter
-      // Prefix with 'x' if segment starts with a digit
       return /^[a-zA-Z]/.test(segment) ? segment : "x" + segment;
     })
     .join(".") || "space.manus.app";
-// Extract timestamp from bundle ID and prefix with "manus" for deep link scheme
-// e.g., "space.manus.my.app.t20240115103045" -> "manus20240115103045"
+
 const timestamp = bundleId.split(".").pop()?.replace(/^t/, "") ?? "";
 const schemeFromBundleId = `manus${timestamp}`;
 
 const env = {
-  // App branding - update these values directly (do not use env vars)
   appName: "Palavra Viva Mobile",
   appSlug: "palavraviva",
-  // S3 URL of the app logo - set this to the URL returned by generate_image when creating custom logo
-  // Leave empty to use the default icon from assets/images/icon.png
   logoUrl: "https://files.manuscdn.com/user_upload_by_module/session_file/310519664038167354/EwdxRWhdPMjACLTk.png",
   scheme: schemeFromBundleId,
   iosBundleId: bundleId,
   androidPackage: bundleId,
 };
 
-// Expo serializes this browser-safe subset into native and web bundles. The server-only
-// MANUS_API_KEY and MANUS_JWT_SECRET must never enter this object.
 const publicRuntime = {
   oauthPortalUrl:
     process.env.MANUS_OAUTH_PORTAL_URL ??
@@ -67,7 +56,7 @@ const config: ExpoConfig = {
   orientation: "portrait",
   icon: "./assets/images/icon.png",
   scheme: env.scheme,
-  userInterfaceStyle: "automatic",
+  userInterfaceStyle: "dark", // Força o modo escuro padrão desde a raiz
   ios: {
     supportsTablet: true,
     bundleIdentifier: env.iosBundleId,
@@ -77,7 +66,7 @@ const config: ExpoConfig = {
   },
   android: {
     adaptiveIcon: {
-      backgroundColor: "#7B2635",
+      backgroundColor: "#1E1014",
       foregroundImage: "./assets/images/android-icon-foreground.png",
       backgroundImage: "./assets/images/android-icon-background.png",
       monochromeImage: "./assets/images/android-icon-monochrome.png",
@@ -106,8 +95,8 @@ const config: ExpoConfig = {
     name: "Palavra Viva — Liturgia e oração",
     shortName: "Palavra Viva",
     description: "Liturgia diária, oração e um caminho de fé para cada dia.",
-    themeColor: "#70253A",
-    backgroundColor: "#F6EFE6",
+    themeColor: "#1E1014",
+    backgroundColor: "#1E1014", // Fundo web alinhado ao tema escuro
   },
   plugins: [
     "expo-asset",
@@ -134,9 +123,9 @@ const config: ExpoConfig = {
         image: "./assets/images/splash-icon.png",
         imageWidth: 200,
         resizeMode: "contain",
-        backgroundColor: "#ffffff",
+        backgroundColor: "#1E1014", // Corrigido para remover o flash branco inicial
         dark: {
-          backgroundColor: "#000000",
+          backgroundColor: "#1E1014",
         },
       },
     ],
