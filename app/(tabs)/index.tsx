@@ -1,14 +1,18 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View, Pressable } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { ScrollView, StyleSheet, Text, View, Pressable, Modal, Platform } from "react-native";
+import { captureRef } from "react-native-view-shot";
+import * as Sharing from "expo-sharing";
 
 import { getDailyWord } from "@/constants/content";
-import { IconCircle, ProgressRing, ScreenHeader, SurfaceCard } from "@/components/palavra-viva-ui";
+import { IconCircle, ProgressRing, ScreenHeader, SurfaceCard, PrimaryButton } from "@/components/palavra-viva-ui";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { useFaithJourney, type JourneyKey } from "@/hooks/use-faith-journey";
 import { useThemeContext } from "@/lib/theme-provider";
+
+const APP_URL = "https://palavra-viva-drab.vercel.app/";
 
 const MISSIONS: { key: JourneyKey; title: string; caption: string; icon: React.ComponentProps<typeof MaterialIcons>["name"]; route: "/liturgia" | "/prayers" | "/rosary" }[] = [
   { key: "liturgy", title: "Ler a liturgia", caption: "Um momento de escuta", icon: "menu-book", route: "/liturgia" },
@@ -21,6 +25,9 @@ export default function HomeScreen() {
   const { colorScheme } = useThemeContext();
   const { completed, completedCount, progress, streak, prayerDays, ready, setThemePreference } = useFaithJourney();
   const [today, setToday] = useState(() => new Date());
+  const [shareModalVisible, setShareModalVisible] = useState(false);
+  const cardRef = useRef<View>(null);
+
   const dailyWord = getDailyWord(today);
   const dateLabel = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(today);
 
@@ -32,13 +39,20 @@ export default function HomeScreen() {
     return () => clearInterval(timer);
   }, []);
 
-  // Função para gerar/compartilhar a imagem da Palavra do Dia
-  const handleGerarImagem = () => {
-    // Redireciona para a liturgia com o gerador de imagem ou dispara a sua lógica de imagem
-    router.push({
-      pathname: "/liturgia",
-      params: { mode: "share", quote: dailyWord.quote, reference: dailyWord.reference }
-    } as never);
+  // Função exata utilizada na Liturgia para captura e download da imagem
+  const downloadCard = async () => {
+    if (!cardRef.current) return;
+    if (Platform.OS === "web") {
+      const html2canvas = (await import("html2canvas")).default;
+      const canvas = await html2canvas(cardRef.current as unknown as HTMLElement, { scale: 2, useCORS: true, backgroundColor: null });
+      const link = document.createElement("a");
+      link.download = "palavra-viva-do-dia.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      return;
+    }
+    const uri = await captureRef(cardRef, { format: "png", quality: 1, result: "tmpfile" });
+    if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(uri, { mimeType: "image/png", dialogTitle: "Salvar card da Palavra Viva" });
   };
 
   return (
@@ -73,18 +87,15 @@ export default function HomeScreen() {
           <View style={styles.wordDivider} />
           <Text style={[styles.wordReflection, { color: colors.onPrimary }]}>{dailyWord.reflection}</Text>
 
-          {/* Botão Gerar Imagem para Status/Stories */}
+          {/* Botão para abrir a modal de geração de imagem */}
           <Pressable 
-            onPress={handleGerarImagem}
+            onPress={() => setShareModalVisible(true)}
             accessibilityRole="button"
-            accessibilityLabel="Gerar Imagem para Status e Stories"
-            style={({ pressed }) => [
-              styles.shareImageButton, 
-              { opacity: pressed ? 0.8 : 1 }
-            ]}
+            accessibilityLabel="Gerar imagem da Palavra do Dia"
+            style={({ pressed }) => [styles.cardButton, { opacity: pressed ? 0.7 : 1 }]}
           >
-            <MaterialIcons name="image" size={18} color="#FFB3C1" />
-            <Text style={styles.shareImageButtonText}>Gerar Imagem para Status/Stories</Text>
+            <MaterialIcons name="image" size={17} color={colors.onPrimary} />
+            <Text style={[styles.cardButtonText, { color: colors.onPrimary }]}>Gerar Imagem para Status/Stories</Text>
           </Pressable>
         </SurfaceCard>
 
@@ -147,6 +158,48 @@ export default function HomeScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* Modal de prévia com Proporção de Quadrado (1:1.05) */}
+      <Modal visible={shareModalVisible} transparent animationType="fade" onRequestClose={() => setShareModalVisible(false)}>
+        <View style={[styles.modalBackdrop, { backgroundColor: "#1E1014CC" }]}>
+          <View style={[styles.modalSheet, { backgroundColor: colors.background }]}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={[styles.modalEyebrow, { color: colors.primary }]}>PRONTO PARA COMPARTILHAR</Text>
+                <Text style={[styles.modalTitle, { color: colors.foreground }]}>Card Palavra do Dia</Text>
+              </View>
+              <Pressable onPress={() => setShareModalVisible(false)} accessibilityRole="button" accessibilityLabel="Fechar prévia">
+                <MaterialIcons name="close" size={24} color={colors.muted} />
+              </Pressable>
+            </View>
+
+            {/* Container Quadrado Ajustado (1 : 1.05) */}
+            <View ref={cardRef} collapsable={false} style={[styles.shareCardSquare, { backgroundColor: colors.primary }]}>
+              <View>
+                <View style={styles.shareCardTop}>
+                  <Text style={[styles.shareBrand, { color: colors.onPrimary }]}>Palavra Viva</Text>
+                  <Text style={styles.shareMark}>✦</Text>
+                </View>
+                <Text style={styles.shareDate}>{dateLabel}</Text>
+                <View style={styles.shareRule} />
+                <Text style={styles.shareLabel}>PALAVRA DO DIA</Text>
+                <Text style={[styles.shareQuoteSquare, { color: colors.onPrimary }]}>“{dailyWord.quote}”</Text>
+                <Text style={[styles.shareReferenceSquare, { color: colors.onPrimary }]}>— {dailyWord.reference}</Text>
+              </View>
+
+              <View style={styles.shareFooter}>
+                <Text style={[styles.shareFooterText, { color: colors.onPrimary }]}>Acesse em</Text>
+                <Text style={[styles.shareUrl, { color: colors.onPrimary }]}>palavra-viva-drab.vercel.app</Text>
+              </View>
+            </View>
+
+            <View style={styles.modalActions}>
+              <PrimaryButton variant="outline" onPress={() => setShareModalVisible(false)}>Fechar</PrimaryButton>
+              <PrimaryButton icon="download" onPress={downloadCard}>Baixar Imagem</PrimaryButton>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScreenContainer>
   );
 }
@@ -179,21 +232,8 @@ const styles = StyleSheet.create({
   reference: { fontSize: 15, marginTop: 8 },
   wordDivider: { height: 1, backgroundColor: "#FFFFFF33", marginVertical: 18 },
   wordReflection: { fontSize: 14, lineHeight: 21 },
-  // Estilos adicionados para o botão de imagem
-  shareImageButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 18,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.15)",
-  },
-  shareImageButtonText: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "700",
-  },
+  cardButton: { marginTop: 16, paddingTop: 12, borderTopWidth: 1, borderTopColor: "rgba(255, 255, 255, 0.2)", flexDirection: "row", alignItems: "center", gap: 6 },
+  cardButtonText: { fontSize: 12, fontWeight: "800" },
   quizCard: { minHeight: 78, borderRadius: 19, borderWidth: 1, padding: 13, flexDirection: "row", alignItems: "center", marginBottom: 14 },
   quizIcon: { width: 48, height: 48, borderRadius: 17, alignItems: "center", justifyContent: "center" },
   quizText: { flex: 1, marginHorizontal: 12 },
@@ -226,4 +266,23 @@ const styles = StyleSheet.create({
   legalLinks: { flexDirection: "row", alignItems: "center", gap: 8 },
   legalLink: { fontSize: 12, fontWeight: "700" },
   legalDot: { fontSize: 14 },
+  modalBackdrop: { flex: 1, justifyContent: "center", padding: 16 },
+  modalSheet: { borderRadius: 25, padding: 17, maxHeight: "94%" },
+  modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 },
+  modalEyebrow: { fontSize: 10, fontWeight: "800", letterSpacing: 1.3 },
+  modalTitle: { fontSize: 21, fontFamily: "serif", fontWeight: "700", marginTop: 4 },
+  /* Estilo com Proporção do Quadrado (1 : 1.05) */
+  shareCardSquare: { width: "100%", aspectRatio: 1 / 1.05, borderRadius: 18, padding: 18, justifyContent: "space-between", overflow: "hidden" },
+  shareCardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  shareBrand: { fontFamily: "serif", fontSize: 18, fontWeight: "700" },
+  shareMark: { color: "#E7BC6A", fontSize: 20 },
+  shareDate: { color: "#F0D7B7", fontSize: 10, textTransform: "capitalize", marginTop: 4 },
+  shareRule: { height: 1, backgroundColor: "#FFFFFF44", marginVertical: 12 },
+  shareLabel: { color: "#E7BC6A", fontSize: 9, letterSpacing: 1.5, fontWeight: "800" },
+  shareQuoteSquare: { fontFamily: "serif", fontSize: 18, lineHeight: 25, marginTop: 10 },
+  shareReferenceSquare: { fontSize: 13, fontWeight: "700", marginTop: 8 },
+  shareFooter: { borderTopWidth: 1, borderTopColor: "#FFFFFF44", paddingTop: 10 },
+  shareFooterText: { fontSize: 9 },
+  shareUrl: { fontSize: 9, fontWeight: "700", marginTop: 2 },
+  modalActions: { flexDirection: "row", gap: 9, marginTop: 14 },
 });
