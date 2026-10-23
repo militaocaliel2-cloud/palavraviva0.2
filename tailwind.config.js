@@ -5,8 +5,8 @@ const tailwindColors = Object.fromEntries(
   Object.entries(themeColors).map(([name, swatch]) => [
     name,
     {
-      DEFAULT: `var(--color-${name})`,
-      light: swatch.light,
+      DEFAULT: swatch.dark, // Define a cor escura como padrão
+      light: swatch.dark,   // Mapeia chamadas 'light' para o tom escuro
       dark: swatch.dark,
     },
   ]),
@@ -26,8 +26,9 @@ module.exports = {
   },
   plugins: [
     plugin(({ addVariant }) => {
-      addVariant("light", ':root:not([data-theme="dark"]) &');
-      addVariant("dark", ':root[data-theme="dark"] &');
+      // Força a variante 'light' a seguir as regras de 'dark' para evitar inconsistências
+      addVariant("light", '&');
+      addVariant("dark", '&');
     }),
   ],
 };
