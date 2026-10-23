@@ -1,3 +1,113 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-display: Georgia, "Times New Roman", serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-gold: var(--gold);
+  --color-brand: var(--brand);
+  --color-brand-gold: var(--brand-gold);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+:root {
+  --radius: 1.1875rem;
+  --background: #F6EFE6;
+  --foreground: #28171C;
+  --card: #FFFCF7;
+  --card-foreground: #28171C;
+  --popover: #FFFCF7;
+  --popover-foreground: #28171C;
+  --primary: #70253A;
+  --primary-foreground: #FFF9F1;
+  --secondary: #F0DED9;
+  --secondary-foreground: #70253A;
+  --muted: #F0DED9;
+  --muted-foreground: #5A4B47;
+  --accent: #F0DED9;
+  --accent-foreground: #70253A;
+  --gold: #B27A2C;
+  --destructive: #B94A54;
+  --destructive-foreground: #FFF9F1;
+  --success: #5E8069;
+  --success-soft: #5E806920;
+  --border: #E7DCD0;
+  --input: #E7DCD0;
+  --ring: #B27A2C;
+  --brand: #7B2635;
+  --brand-gold: #E8BE70;
+  --gradient-hero: linear-gradient(180deg, #70253A22, #70253ADD);
+  --shadow-soft: 0 5px 20px -12px #70253A30;
+  --story-deep: #43272F;
+}
+
+.dark {
+  --background: #1D171A;
+  --foreground: #F8EEE8;
+  --card: #2A2023;
+  --card-foreground: #F8EEE8;
+  --popover: #2A2023;
+  --popover-foreground: #F8EEE8;
+  --primary: #D99AA1;
+  --primary-foreground: #2E1B1F;
+  --secondary: #43272F;
+  --secondary-foreground: #D99AA1;
+  --muted: #43272F;
+  --muted-foreground: #C7B8B2;
+  --accent: #43272F;
+  --accent-foreground: #D99AA1;
+  --gold: #E8BE70;
+  --success: #9CC5A7;
+  --success-soft: #9CC5A720;
+  --destructive: #EF949A;
+  --border: #4D3B3D;
+  --input: #4D3B3D;
+  --shadow-soft: 0 5px 20px -12px #00000050;
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+  }
+  h1, h2, h3 { font-family: var(--font-display); }
+}
+
+@utility hero-overlay { background: var(--gradient-hero); }
+@utility shadow-soft { box-shadow: var(--shadow-soft); }
+
+@layer components {
+  .faith-card { border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); padding: 18px; }
+  .eyebrow { color: var(--primary); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0; }
+  .icon-box { display: grid; place-items: center; width: 48px; height: 48px; flex-shrink: 0; border-radius: 17px; background: var(--secondary); color: var(--primary); }
+}
