@@ -1,116 +1,52 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useFocusEffect } from "expo-router";
+import { router } from "expo-router";
+import { useEffect, useRef, useState } from "react";
+import { ScrollView, StyleSheet, Text, View, Pressable, Modal, Platform } from "react-native";
 import { captureRef } from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
-import { LiturgyAudioPlayer } from "@/components/liturgy-audio-player";
-import { PrimaryButton, ScreenHeader, SurfaceCard } from "@/components/palavra-viva-ui";
-import { DatePicker } from "@/components/date-picker";
+import { getDailyWord } from "@/constants/content";
+import { IconCircle, ProgressRing, ScreenHeader, SurfaceCard, PrimaryButton } from "@/components/palavra-viva-ui";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
-import { useFaithJourney } from "@/hooks/use-faith-journey";
-import { useSpeechPlayer, type SpeechItem } from "@/hooks/use-speech-player";
-import { getGospelReflection } from "@/constants/reflections";
-import { fetchLiturgy, formatReadableDate, type LiturgyDay, type LiturgyReading } from "@/lib/liturgy-api";
+import { useFaithJourney, type JourneyKey } from "@/hooks/use-faith-journey";
+import { useThemeContext } from "@/lib/theme-provider";
 
 const APP_URL = "https://palavra-viva-drab.vercel.app/";
 
-type ReadingSection = { key: string; label: string; readings: LiturgyReading[] };
+const MISSIONS: { key: JourneyKey; title: string; caption: string; icon: React.ComponentProps<typeof MaterialIcons>["name"]; route: "/liturgia" | "/prayers" | "/rosary" }[] = [
+  { key: "liturgy", title: "Ler a liturgia", caption: "Um momento de escuta", icon: "menu-book", route: "/liturgia" },
+  { key: "prayer", title: "Fazer uma oração", caption: "Converse com Deus", icon: "volunteer-activism", route: "/prayers" },
+  { key: "rosary", title: "Rezar o terço", caption: "Caminhe em oração", icon: "radio-button-checked", route: "/rosary" },
+];
 
-export default function LiturgyScreen() {
+export default function HomeScreen() {
   const colors = useColors();
-  const { completed, completeActivity, favorites, toggleFavorite, reflectionNotes, setReflectionNote } = useFaithJourney();
-  const [selectedDate, setSelectedDate] = useState(() => new Date());
-  const [liturgy, setLiturgy] = useState<LiturgyDay | null>(null);
-  const [fontScale, setFontScale] = useState(1);
-  const [pickerVisible, setPickerVisible] = useState(false);
+  const { colorScheme } = useThemeContext();
+  const { completed, completedCount, progress, streak, prayerDays, ready, setThemePreference } = useFaithJourney();
+  const [today, setToday] = useState(() => new Date());
   const [shareModalVisible, setShareModalVisible] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const cardRef = useRef<View>(null);
 
-  const chooseDate = (date: Date) => {
-    setLiturgy(null);
-    setError("");
-    setSelectedDate(date);
-  };
-
-  useEffect(() => {
-    let active = true;
-    // The request lifecycle intentionally resets these indicators when the selected date changes.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLoading(true);
-    setError("");
-    fetchLiturgy(selectedDate)
-      .then((data) => { if (active) setLiturgy(data); })
-      .catch((reason: unknown) => { if (active) setError(reason instanceof Error ? reason.message : "Não foi possível carregar a liturgia desta data."); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, [selectedDate]);
+  const dailyWord = getDailyWord(today);
+  const dateLabel = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(today);
 
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
-      if (selectedDate.toDateString() === new Date().toDateString() && now.toDateString() !== selectedDate.toDateString()) {
-        // The open screen follows the new liturgical day after midnight.
-        setLiturgy(null);
-        setSelectedDate(now);
-      }
+      setToday((current) => current.toDateString() === now.toDateString() ? current : now);
     }, 60000);
     return () => clearInterval(timer);
-  }, [selectedDate]);
+  }, []);
 
-  const sections = useMemo<ReadingSection[]>(() => {
-    const readings = liturgy?.leituras;
-    return [
-      { key: "primeira", label: "Primeira Leitura", readings: readings?.primeiraLeitura ?? [] },
-      { key: "salmo", label: "Salmo", readings: readings?.salmo ?? [] },
-      { key: "segunda", label: "Segunda Leitura", readings: readings?.segundaLeitura ?? [] },
-      { key: "evangelho", label: "Evangelho", readings: readings?.evangelho ?? [] },
-    ];
-  }, [liturgy]);
-
-  const speechItems = useMemo<SpeechItem[]>(() => sections.flatMap((section) => section.readings.map((reading, index) => ({
-    id: `${section.key}-${index}`,
-    label: section.label,
-    text: [section.label, reading.titulo, reading.referencia, reading.refrao ? `Refrão: ${reading.refrao}` : "", reading.texto].filter(Boolean).join(". "),
-  }))), [sections]);
-  const audio = useSpeechPlayer(speechItems);
-  const stopAudio = audio.stop;
-  useFocusEffect(useCallback(() => () => stopAudio(), [stopAudio]));
-
-  const gospel = sections.find((section) => section.key === "evangelho")?.readings[0];
-  const isToday = selectedDate.toDateString() === new Date().toDateString();
-  const dateLabel = formatReadableDate(selectedDate);
-  const dateKey = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
-  const reflection = getGospelReflection(selectedDate, gospel?.referencia ?? "o Evangelho de hoje");
-
-  const moveDate = (amount: number) => {
-    const next = new Date(selectedDate);
-    next.setDate(next.getDate() + amount);
-    chooseDate(next);
-  };
-
-  const shareReading = async (label: string, reading: LiturgyReading) => {
-    const content = [
-      `Palavra Viva — ${label}`,
-      reading.referencia ? `Referência: ${reading.referencia}` : "",
-      reading.refrao ? `Refrão: ${reading.refrao}` : "",
-      reading.texto ?? "",
-      `Leia a liturgia completa: ${APP_URL}`,
-    ].filter(Boolean).join("\n\n");
-    await Linking.openURL(`https://api.whatsapp.com/send?text=${encodeURIComponent(content)}`);
-  };
-
+  // Função para baixar/compartilhar o card da Palavra do Dia (igual à liturgia)
   const downloadCard = async () => {
     if (!cardRef.current) return;
     if (Platform.OS === "web") {
       const html2canvas = (await import("html2canvas")).default;
       const canvas = await html2canvas(cardRef.current as unknown as HTMLElement, { scale: 2, useCORS: true, backgroundColor: null });
       const link = document.createElement("a");
-      link.download = "palavra-viva-evangelho.png";
+      link.download = "palavra-viva-do-dia.png";
       link.href = canvas.toDataURL("image/png");
       link.click();
       return;
@@ -122,80 +58,142 @@ export default function LiturgyScreen() {
   return (
     <ScreenContainer>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        <ScreenHeader eyebrow={liturgy?.cor ? `Cor litúrgica: ${liturgy.cor}` : "Liturgia diária"} title="Liturgia diária" subtitle="A Palavra completa para acompanhar o seu dia." action={<MaterialIcons name="menu-book" size={30} color={colors.gold} />} />
-
-        <SurfaceCard style={styles.dateCard}>
-          <View style={styles.dateNavigation}>
-            <TextIconButton icon="chevron-left" label="Dia anterior" onPress={() => moveDate(-1)} />
-            <Pressable onPress={() => setPickerVisible(true)} accessibilityRole="button" accessibilityLabel="Escolher data da liturgia" style={styles.dateCenter}>
-              <Text style={[styles.dateLabel, { color: colors.primary }]}>{isToday ? "HOJE" : "DATA CONSULTADA"}</Text>
-              <Text style={[styles.dateTitle, { color: colors.foreground }]}>{dateLabel}</Text>
-              <Text style={[styles.dateHint, { color: colors.muted }]}>Toque para escolher outra data</Text>
-            </Pressable>
-            <TextIconButton icon="chevron-right" label="Próximo dia" onPress={() => moveDate(1)} />
+        <View style={styles.brandRow}>
+          <View style={styles.brandMark}><Text style={[styles.brandSymbol, { color: colors.gold }]}>✦</Text></View>
+          <View>
+            <Text style={[styles.brandName, { color: colors.foreground }]}>Palavra <Text style={{ color: colors.primary }}>Viva</Text></Text>
+            <Text style={[styles.brandMeta, { color: colors.muted }]}>seu caminho diário de fé</Text>
           </View>
-          {!isToday ? <PrimaryButton variant="soft" icon="today" onPress={() => chooseDate(new Date())} accessibilityLabel="Voltar para a liturgia de hoje">Voltar para hoje</PrimaryButton> : null}
-        </SurfaceCard>
-
-        <DatePicker visible={pickerVisible} value={selectedDate} onChange={chooseDate} onClose={() => setPickerVisible(false)} />
-
-        <LiturgyAudioPlayer supported={audio.supported} isPlaying={audio.isPlaying} isPaused={audio.isPaused} rate={audio.rate} currentLabel={audio.currentLabel} onPlay={audio.playAll} onPause={audio.togglePause} onStop={audio.stop} onRate={audio.setRate} />
-
-        <View style={styles.readingHeader}>
-          <Text style={[styles.readingEyebrow, { color: colors.primary }]}>LEITURAS COMPLETAS</Text>
-          <View style={[styles.fontControls, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Text style={[styles.fontLabel, { color: colors.muted }]}>Fonte</Text>
-            <TextIconButton icon="text-decrease" label="Diminuir fonte" onPress={() => setFontScale((value) => Math.max(0.88, value - 0.08))} />
-            <Text style={[styles.fontValue, { color: colors.foreground }]}>{fontScale === 1 ? "A" : fontScale > 1 ? "A+" : "A−"}</Text>
-            <TextIconButton icon="text-increase" label="Aumentar fonte" onPress={() => setFontScale((value) => Math.min(1.2, value + 0.08))} />
+          <View style={styles.headerActions}>
+            <Pressable onPress={() => router.push("/configuracoes" as never)} accessibilityRole="button" accessibilityLabel="Abrir configurações" style={[styles.settingsButton, { backgroundColor: colors.primarySoft }]}>
+              <MaterialIcons name="tune" size={19} color={colors.primary} />
+            </Pressable>
+            <Pressable onPress={() => setThemePreference(colorScheme === "dark" ? "light" : "dark")} accessibilityRole="button" accessibilityLabel="Alternar modo claro e escuro" style={[styles.themeButton, { backgroundColor: colors.primarySoft }]}>
+              <Text style={[styles.themeSymbol, { color: colors.primary }]}>{colorScheme === "dark" ? "☼" : "☾"}</Text>
+            </Pressable>
           </View>
         </View>
 
-        {loading ? <View style={styles.loading}><ActivityIndicator color={colors.primary} /><Text style={[styles.loadingText, { color: colors.muted }]}>Buscando a liturgia de {dateLabel}…</Text></View> : null}
-        {error ? <SurfaceCard style={styles.errorCard}><MaterialIcons name="cloud-off" size={24} color={colors.error} /><Text style={[styles.errorText, { color: colors.foreground }]}>{error}</Text><PrimaryButton variant="soft" icon="refresh" onPress={() => chooseDate(new Date(selectedDate))}>Tentar novamente</PrimaryButton></SurfaceCard> : null}
+        <ScreenHeader eyebrow={dateLabel} title="Um pequeno passo para hoje." subtitle="Que a sua presença encontre espaço entre as coisas do dia." />
 
-        {liturgy ? <>
-          <SurfaceCard style={styles.titleCard} accent={colors.gold}>
-            <Text style={[styles.liturgyTitle, { color: colors.foreground }]}>{liturgy.liturgia}</Text>
-            <Text style={[styles.liturgyReference, { color: colors.primary }]}>{liturgy.data}{liturgy.cor ? ` · ${liturgy.cor}` : ""}</Text>
-          </SurfaceCard>
-
-          <SurfaceCard style={styles.reflectionCard}>
-            <View style={styles.reflectionHeading}><View style={[styles.reflectionIcon, { backgroundColor: colors.primarySoft }]}><MaterialIcons name="lightbulb-outline" size={19} color={colors.primary} /></View><View style={styles.reflectionHeadingText}><Text style={[styles.reflectionEyebrow, { color: colors.primary }]}>MODO DE REFLEXÃO</Text><Text style={[styles.reflectionTitle, { color: colors.foreground }]}>Uma pausa com o Evangelho</Text></View></View>
-            <Text style={[styles.reflectionText, { color: colors.foreground }]}>{reflection.comment}</Text>
-            <Text style={[styles.reflectionPrompt, { color: colors.primary }]}>{reflection.prompt}</Text>
-            <TextInput value={reflectionNotes[dateKey] ?? ""} onChangeText={(text) => setReflectionNote(dateKey, text)} multiline placeholder="Escreva uma palavra, intenção ou comentário..." placeholderTextColor={colors.muted} accessibilityLabel="Anotação pessoal sobre o Evangelho" style={[styles.reflectionInput, { color: colors.foreground, backgroundColor: colors.background, borderColor: colors.border }]} />
-          </SurfaceCard>
-
-          <View style={styles.readings}>
-            {sections.map((section) => {
-              const readings = section.readings.length > 0 ? section.readings : [{ texto: "Não há segunda leitura hoje.", referencia: "" }];
-              return <View key={section.key} style={styles.sectionGroup}>
-                {readings.map((reading, index) => { const itemId = `${section.key}-${index}`; const speechIndex = speechItems.findIndex((item) => item.id === itemId); const canFavorite = section.readings.length > 0; const saved = favorites.some((item) => item.id === `${dateKey}-${itemId}`); return <ReadingCard key={itemId} section={section.label} reading={reading} fontScale={fontScale} colors={colors} onShare={() => shareReading(section.label, reading)} onListen={speechIndex >= 0 ? () => audio.playItem(speechIndex) : undefined} isListening={speechIndex >= 0 && audio.currentIndex === speechIndex && (audio.isPlaying || audio.isPaused)} onFavorite={canFavorite ? () => toggleFavorite({ id: `${dateKey}-${itemId}`, title: reading.titulo || section.label, section: section.label, reference: reading.referencia ?? "", text: reading.texto ?? reading.refrao ?? "", dateLabel }) : undefined} isFavorite={saved} onGenerateCard={section.key === "evangelho" ? () => setShareModalVisible(true) : undefined} />; })}
-              </View>;
-            })}
+        {/* Card da Palavra do Dia */}
+        <SurfaceCard style={[styles.wordCard, { backgroundColor: colors.primary, borderColor: colors.primary }]}>
+          <View style={styles.wordLabelRow}>
+            <Text style={styles.wordLabel}>PALAVRA DO DIA</Text>
+            <MaterialIcons name="flare" size={18} color={colors.gold} />
           </View>
+          <Text style={[styles.quote, { color: colors.onPrimary }]}>“{dailyWord.quote}”</Text>
+          <Text style={[styles.reference, { color: colors.onPrimary }]}>— {dailyWord.reference}</Text>
+          <View style={styles.wordDivider} />
+          <Text style={[styles.wordReflection, { color: colors.onPrimary }]}>{dailyWord.reflection}</Text>
 
-          {liturgy.oracoes ? <SurfaceCard style={styles.prayersCard}><Text style={[styles.prayersTitle, { color: colors.foreground }]}>Orações da celebração</Text>{([['Coleta', liturgy.oracoes.coleta], ['Oferendas', liturgy.oracoes.oferendas], ['Comunhão', liturgy.oracoes.comunhao]] as [string, string | undefined][]).filter((item) => item[1]).map(([label, text]) => <View key={label} style={styles.prayerBlock}><Text style={[styles.prayerLabel, { color: colors.primary }]}>{label}</Text><Text style={[styles.prayerText, { color: colors.foreground, fontSize: 15 * fontScale, lineHeight: 23 * fontScale }]}>{text}</Text></View>)}</SurfaceCard> : null}
-        </> : null}
+          {/* Botão que abre o Modal de Gerar Imagem */}
+          <Pressable 
+            onPress={() => setShareModalVisible(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Gerar imagem da Palavra do Dia para Status ou Stories"
+            style={({ pressed }) => [styles.cardButton, { opacity: pressed ? 0.7 : 1 }]}
+          >
+            <MaterialIcons name="image" size={17} color={colors.onPrimary} />
+            <Text style={[styles.cardButtonText, { color: colors.onPrimary }]}>Gerar Imagem para Status/Stories</Text>
+          </Pressable>
+        </SurfaceCard>
 
-        <PrimaryButton icon={completed.liturgy ? "check-circle" : "done"} onPress={() => completeActivity("liturgy")} accessibilityLabel={completed.liturgy ? "Liturgia marcada como lida" : "Marcar liturgia como lida"}>{completed.liturgy ? "Liturgia lida hoje" : "Marcar como lida"}</PrimaryButton>
+        <Pressable onPress={() => router.push("/quiz" as never)} accessibilityRole="button" accessibilityLabel="Abrir Quiz do Dia" style={({ pressed }) => [styles.quizCard, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.75 : 1 }]}>
+          <View style={[styles.quizIcon, { backgroundColor: colors.primarySoft }]}><MaterialIcons name="quiz" size={22} color={colors.primary} /></View>
+          <View style={styles.quizText}><Text style={[styles.quizEyebrow, { color: colors.primary }]}>DESAFIO DE HOJE</Text><Text style={[styles.quizTitle, { color: colors.foreground }]}>Quiz do Evangelho</Text><Text style={[styles.quizCaption, { color: colors.muted }]}>Três perguntas para guardar a Liturgia.</Text></View>
+          <MaterialIcons name="arrow-forward-ios" size={16} color={colors.muted} />
+        </Pressable>
+
+        <SurfaceCard style={styles.progressCard}>
+          <View style={styles.progressTopLine}>
+            <View>
+              <Text style={[styles.cardEyebrow, { color: colors.primary }]}>SUA JORNADA</Text>
+              <Text style={[styles.progressTitle, { color: colors.foreground }]}>{ready ? "Continue de onde você parou" : "Preparando seu caminho"}</Text>
+              <Text style={[styles.progressCaption, { color: colors.muted }]}>{completedCount} de 3 práticas concluídas hoje</Text>
+            </View>
+            <ProgressRing progress={progress} />
+          </View>
+          <View style={[styles.progressTrack, { backgroundColor: colors.primarySoft }]}>
+            <View style={[styles.progressFill, { width: `${Math.max(progress * 100, 3)}%`, backgroundColor: colors.gold }]} />
+          </View>
+          <View style={styles.statsRow}>
+            <MiniStat icon="local-fire-department" value={String(streak)} label="dias seguidos" colors={colors} />
+            <MiniStat icon="favorite-border" value={String(prayerDays)} label="dias de oração" colors={colors} />
+            <MiniStat icon="check-circle-outline" value={`${completedCount}/3`} label="missão de hoje" colors={colors} />
+          </View>
+        </SurfaceCard>
+
+        <View style={styles.sectionHeading}>
+          <View>
+            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Sua missão de hoje</Text>
+            <Text style={[styles.sectionCaption, { color: colors.muted }]}>Três pausas que cabem no seu ritmo.</Text>
+          </View>
+          <MaterialIcons name="north-east" size={20} color={colors.gold} />
+        </View>
+
+        <View style={styles.missionList}>
+          {MISSIONS.map((mission) => (
+            <Pressable key={mission.key} onPress={() => router.push(mission.route)} accessibilityRole="button" accessibilityLabel={`${mission.title}. ${completed[mission.key] ? "Concluída" : mission.caption}`} style={({ pressed }) => [styles.missionRow, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.7 : 1 }]}>
+              <IconCircle name={mission.icon} color={completed[mission.key] ? colors.success : colors.primary} backgroundColor={completed[mission.key] ? `${colors.success}22` : colors.primarySoft} />
+              <View style={styles.missionText}>
+                <Text style={[styles.missionTitle, { color: colors.foreground }]}>{mission.title}</Text>
+                <Text style={[styles.missionCaption, { color: colors.muted }]}>{completed[mission.key] ? "Concluída hoje" : mission.caption}</Text>
+              </View>
+              <MaterialIcons name={completed[mission.key] ? "check-circle" : "arrow-forward-ios"} size={completed[mission.key] ? 22 : 16} color={completed[mission.key] ? colors.success : colors.muted} />
+            </Pressable>
+          ))}
+        </View>
+
+        <View style={[styles.quoteStrip, { borderTopColor: colors.border }]}>
+          <MaterialIcons name="format-quote" size={22} color={colors.gold} />
+          <Text style={[styles.quoteStripText, { color: colors.muted }]}>A constância nasce de um gesto simples repetido com intenção.</Text>
+        </View>
+        <View style={styles.legalFooter}>
+          <Text style={[styles.legalLabel, { color: colors.muted }]}>Informações legais</Text>
+          <View style={styles.legalLinks}>
+            <Pressable onPress={() => router.push("/politica-de-privacidade" as never)} accessibilityRole="link"><Text style={[styles.legalLink, { color: colors.primary }]}>Privacidade</Text></Pressable>
+            <Text style={[styles.legalDot, { color: colors.border }]}>·</Text>
+            <Pressable onPress={() => router.push("/termos-de-uso" as never)} accessibilityRole="link"><Text style={[styles.legalLink, { color: colors.primary }]}>Termos de uso</Text></Pressable>
+          </View>
+        </View>
       </ScrollView>
 
+      {/* Modal de Prévia e Geração de Imagem (Stories 9:16) */}
       <Modal visible={shareModalVisible} transparent animationType="fade" onRequestClose={() => setShareModalVisible(false)}>
         <View style={[styles.modalBackdrop, { backgroundColor: "#1E1014CC" }]}>
           <View style={[styles.modalSheet, { backgroundColor: colors.background }]}>
-            <View style={styles.modalHeader}><View><Text style={[styles.modalEyebrow, { color: colors.primary }]}>PRONTO PARA COMPARTILHAR</Text><Text style={[styles.modalTitle, { color: colors.foreground }]}>Card para Status/Stories</Text></View><Pressable onPress={() => setShareModalVisible(false)} accessibilityRole="button" accessibilityLabel="Fechar prévia"><MaterialIcons name="close" size={24} color={colors.muted} /></Pressable></View>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={[styles.modalEyebrow, { color: colors.primary }]}>PRONTO PARA COMPARTILHAR</Text>
+                <Text style={[styles.modalTitle, { color: colors.foreground }]}>Card para Status/Stories</Text>
+              </View>
+              <Pressable onPress={() => setShareModalVisible(false)} accessibilityRole="button" accessibilityLabel="Fechar prévia">
+                <MaterialIcons name="close" size={24} color={colors.muted} />
+              </Pressable>
+            </View>
+
+            {/* Elemento capturado pelo cardRef */}
             <View ref={cardRef} collapsable={false} style={[styles.shareCard, { backgroundColor: colors.primary }]}>
-              <View style={styles.shareCardTop}><Text style={[styles.shareBrand, { color: colors.onPrimary }]}>Palavra Viva</Text><Text style={styles.shareMark}>✦</Text></View>
+              <View style={styles.shareCardTop}>
+                <Text style={[styles.shareBrand, { color: colors.onPrimary }]}>Palavra Viva</Text>
+                <Text style={styles.shareMark}>✦</Text>
+              </View>
               <Text style={styles.shareDate}>{dateLabel}</Text>
               <View style={styles.shareRule} />
-              <Text style={styles.shareLabel}>EVANGELHO</Text>
-              <Text style={[styles.shareReference, { color: colors.onPrimary }]}>{gospel?.referencia ?? "Palavra do dia"}</Text>
-              <Text style={[styles.shareQuote, { color: colors.onPrimary }]}>{gospel?.texto ?? "A Palavra de Deus ilumina o caminho de hoje."}</Text>
-              <View style={styles.shareFooter}><Text style={[styles.shareFooterText, { color: colors.onPrimary }]}>Leia a liturgia completa em</Text><Text style={[styles.shareUrl, { color: colors.onPrimary }]}>palavra-viva-drab.vercel.app</Text></View>
+              <Text style={styles.shareLabel}>PALAVRA DO DIA</Text>
+              <Text style={[styles.shareReference, { color: colors.onPrimary }]}>{dailyWord.reference}</Text>
+              <Text style={[styles.shareQuote, { color: colors.onPrimary }]}>“{dailyWord.quote}”</Text>
+              <View style={styles.shareFooter}>
+                <Text style={[styles.shareFooterText, { color: colors.onPrimary }]}>Acesse a Palavra Viva em</Text>
+                <Text style={[styles.shareUrl, { color: colors.onPrimary }]}>palavra-viva-drab.vercel.app</Text>
+              </View>
             </View>
-            <View style={styles.modalActions}><PrimaryButton variant="outline" onPress={() => setShareModalVisible(false)}>Fechar</PrimaryButton><PrimaryButton icon="download" onPress={downloadCard}>Baixar Imagem</PrimaryButton></View>
+
+            <View style={styles.modalActions}>
+              <PrimaryButton variant="outline" onPress={() => setShareModalVisible(false)}>Fechar</PrimaryButton>
+              <PrimaryButton icon="download" onPress={downloadCard}>Baixar Imagem</PrimaryButton>
+            </View>
           </View>
         </View>
       </Modal>
@@ -203,76 +201,68 @@ export default function LiturgyScreen() {
   );
 }
 
-function ReadingCard({ section, reading, fontScale, colors, onShare, onListen, isListening, onFavorite, isFavorite, onGenerateCard }: { section: string; reading: LiturgyReading; fontScale: number; colors: ReturnType<typeof useColors>; onShare: () => void; onListen?: () => void; isListening?: boolean; onFavorite?: () => void; isFavorite?: boolean; onGenerateCard?: () => void }) {
-  return <SurfaceCard style={styles.readingCard}>
-    <View style={styles.readingMeta}><View style={styles.readingMetaText}><Text style={[styles.readingLabel, { color: colors.primary }]}>{section}</Text>{reading.titulo ? <Text style={[styles.readingSubtitle, { color: colors.muted }]}>{reading.titulo}</Text> : null}</View><Text style={[styles.readingReference, { color: colors.muted }]}>{reading.referencia}</Text></View>
-    {reading.refrao ? <View style={[styles.refrain, { backgroundColor: colors.primarySoft }]}><Text style={[styles.refrainLabel, { color: colors.primary }]}>REFRÃO</Text><Text style={[styles.refrainText, { color: colors.foreground, fontSize: 15 * fontScale, lineHeight: 23 * fontScale }]}>{reading.refrao}</Text></View> : null}
-    <Text style={[styles.readingText, { color: colors.foreground, fontSize: 16 * fontScale, lineHeight: 25 * fontScale }]}>{reading.texto ?? "Conteúdo não disponível para esta leitura."}</Text>
-    <View style={[styles.shareRow, { borderTopColor: colors.border }]}>{onListen ? <Pressable onPress={onListen} accessibilityRole="button" accessibilityLabel={`${isListening ? "Pausar" : "Ouvir"} ${section}`} style={({ pressed }) => [styles.listenButton, { backgroundColor: colors.primarySoft, opacity: pressed ? 0.7 : 1 }]}><MaterialIcons name={isListening ? "pause" : "volume-up"} size={17} color={colors.primary} /><Text style={[styles.listenButtonText, { color: colors.primary }]}>{isListening ? "Pausar" : "Ouvir"}</Text></Pressable> : null}{onFavorite ? <Pressable onPress={onFavorite} accessibilityRole="button" accessibilityLabel={isFavorite ? `Remover ${section} dos favoritos` : `Salvar ${section} nos favoritos`} style={({ pressed }) => [styles.favoriteButton, { backgroundColor: isFavorite ? `${colors.gold}25` : colors.background, borderColor: isFavorite ? colors.gold : colors.border, opacity: pressed ? 0.7 : 1 }]}><MaterialIcons name={isFavorite ? "bookmark" : "bookmark-border"} size={17} color={colors.gold} /><Text style={[styles.favoriteButtonText, { color: colors.gold }]}>{isFavorite ? "Salvo" : "Salvar"}</Text></Pressable> : null}<Pressable onPress={onShare} accessibilityRole="button" accessibilityLabel={`Compartilhar ${section} no WhatsApp`} style={({ pressed }) => [styles.shareButton, { backgroundColor: `${colors.success}1C`, opacity: pressed ? 0.7 : 1 }]}><MaterialIcons name="share" size={17} color={colors.success} /><Text style={[styles.shareButtonText, { color: colors.success }]}>Compartilhar no WhatsApp</Text></Pressable>{onGenerateCard ? <Pressable onPress={onGenerateCard} accessibilityRole="button" accessibilityLabel="Gerar imagem do Evangelho para Status ou Stories" style={({ pressed }) => [styles.cardButton, { opacity: pressed ? 0.7 : 1 }]}><MaterialIcons name="image" size={17} color={colors.primary} /><Text style={[styles.cardButtonText, { color: colors.primary }]}>Gerar Imagem para Status/Stories</Text></Pressable> : null}</View>
-  </SurfaceCard>;
-}
-
-function TextIconButton({ icon, label, onPress }: { icon: React.ComponentProps<typeof MaterialIcons>["name"]; label: string; onPress: () => void }) {
-  const colors = useColors();
-  return <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label} style={({ pressed }) => [styles.iconButton, { opacity: pressed ? 0.55 : 1 }]}><MaterialIcons name={icon} size={21} color={colors.primary} /></Pressable>;
+function MiniStat({ icon, value, label, colors }: { icon: React.ComponentProps<typeof MaterialIcons>["name"]; value: string; label: string; colors: ReturnType<typeof useColors> }) {
+  return (
+    <View style={styles.miniStat}>
+      <MaterialIcons name={icon} size={17} color={colors.gold} />
+      <Text style={[styles.miniValue, { color: colors.foreground }]}>{value}</Text>
+      <Text style={[styles.miniLabel, { color: colors.muted }]}>{label}</Text>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 18, paddingTop: 22, paddingBottom: 32 },
-  dateCard: { paddingVertical: 13, marginBottom: 22 },
-  dateNavigation: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  dateCenter: { alignItems: "center", flex: 1, paddingHorizontal: 5 },
-  dateLabel: { fontSize: 10, letterSpacing: 1.5, fontWeight: "800" },
-  dateTitle: { fontSize: 13, fontWeight: "700", textTransform: "capitalize", marginTop: 5, textAlign: "center" },
-  dateHint: { fontSize: 10, marginTop: 3 },
-  iconButton: { width: 40, height: 40, borderRadius: 14, alignItems: "center", justifyContent: "center" },
-  readingHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
-  readingEyebrow: { fontSize: 10, fontWeight: "800", letterSpacing: 1.6 },
-  fontControls: { flexDirection: "row", alignItems: "center", borderRadius: 15, borderWidth: 1, paddingVertical: 1, paddingHorizontal: 5 },
-  fontLabel: { fontSize: 11, marginHorizontal: 5 },
-  fontValue: { fontSize: 14, fontWeight: "800", marginHorizontal: 2 },
-  loading: { alignItems: "center", paddingVertical: 26, gap: 10 },
-  loadingText: { fontSize: 13 },
-  errorCard: { alignItems: "center", gap: 10, marginBottom: 14 },
-  errorText: { fontSize: 14, lineHeight: 21, textAlign: "center" },
-  titleCard: { padding: 20, marginBottom: 12 },
-  liturgyTitle: { fontSize: 24, fontFamily: "serif", fontWeight: "700" },
-  liturgyReference: { fontSize: 13, fontWeight: "700", marginTop: 7 },
-  reflectionCard: { padding: 16, marginBottom: 14 },
-  reflectionHeading: { flexDirection: "row", alignItems: "center" },
-  reflectionIcon: { width: 37, height: 37, borderRadius: 13, alignItems: "center", justifyContent: "center" },
-  reflectionHeadingText: { flex: 1, marginLeft: 10 },
-  reflectionEyebrow: { fontSize: 9, fontWeight: "800", letterSpacing: 1.3 },
-  reflectionTitle: { fontSize: 17, fontFamily: "serif", fontWeight: "700", marginTop: 3 },
-  reflectionText: { fontSize: 14, lineHeight: 21, marginTop: 14 },
-  reflectionPrompt: { fontSize: 13, lineHeight: 19, fontWeight: "800", marginTop: 10 },
-  reflectionInput: { minHeight: 72, borderWidth: 1, borderRadius: 13, paddingHorizontal: 12, paddingVertical: 10, marginTop: 12, fontSize: 13, textAlignVertical: "top" },
-  readings: { gap: 11, marginBottom: 18 },
-  sectionGroup: { gap: 11 },
-  readingCard: { padding: 17 },
-  readingMeta: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 },
-  readingMetaText: { flex: 1, paddingRight: 8 },
-  readingLabel: { fontSize: 11, fontWeight: "800", letterSpacing: 0.6 },
-  readingSubtitle: { fontSize: 12, marginTop: 4, lineHeight: 17 },
-  readingReference: { fontSize: 12, textAlign: "right" },
-  readingText: { fontFamily: "serif" },
-  refrain: { padding: 12, borderRadius: 13, marginBottom: 12 },
-  refrainLabel: { fontSize: 9, fontWeight: "800", letterSpacing: 1.2, marginBottom: 5 },
-  refrainText: { fontFamily: "serif", fontWeight: "700" },
-  shareRow: { borderTopWidth: 1, marginTop: 16, paddingTop: 12, flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" },
-  listenButton: { borderRadius: 12, paddingHorizontal: 10, paddingVertical: 9, flexDirection: "row", alignItems: "center", gap: 5 },
-  listenButtonText: { fontSize: 11, fontWeight: "800" },
-  favoriteButton: { borderRadius: 12, borderWidth: 1, paddingHorizontal: 10, paddingVertical: 8, flexDirection: "row", alignItems: "center", gap: 5 },
-  favoriteButtonText: { fontSize: 11, fontWeight: "800" },
-  shareButton: { borderRadius: 12, paddingHorizontal: 10, paddingVertical: 9, flexDirection: "row", alignItems: "center", gap: 6 },
-  shareButtonText: { fontSize: 11, fontWeight: "800" },
-  cardButton: { paddingHorizontal: 9, paddingVertical: 9, flexDirection: "row", alignItems: "center", gap: 5, flexShrink: 1 },
-  cardButtonText: { fontSize: 11, fontWeight: "800", flexShrink: 1 },
-  prayersCard: { marginBottom: 18 },
-  prayersTitle: { fontFamily: "serif", fontSize: 19, fontWeight: "700", marginBottom: 4 },
-  prayerBlock: { borderTopWidth: 1, borderTopColor: "#E7DCD0", paddingTop: 13, marginTop: 13 },
-  prayerLabel: { fontSize: 11, fontWeight: "800", letterSpacing: 0.7, marginBottom: 6 },
-  prayerText: { fontFamily: "serif" },
+  content: { paddingHorizontal: 18, paddingTop: 18, paddingBottom: 32 },
+  brandRow: { flexDirection: "row", alignItems: "center", marginBottom: 28 },
+  brandMark: { width: 38, height: 38, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: "#7B2635", marginRight: 10 },
+  brandSymbol: { fontSize: 20, fontWeight: "800" },
+  brandName: { fontFamily: "serif", fontSize: 21, fontWeight: "700" },
+  brandMeta: { fontSize: 10, letterSpacing: 0.4, marginTop: 1 },
+  themeButton: { marginLeft: "auto", width: 42, height: 42, borderRadius: 15, alignItems: "center", justifyContent: "center" },
+  headerActions: { marginLeft: "auto", flexDirection: "row", gap: 8 },
+  settingsButton: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  themeSymbol: { fontSize: 24, lineHeight: 27, fontWeight: "700" },
+  wordCard: { padding: 20, marginBottom: 14 },
+  wordLabelRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  wordLabel: { color: "#E8C98B", fontSize: 10, fontWeight: "800", letterSpacing: 1.8 },
+  quote: { fontFamily: "serif", fontSize: 27, lineHeight: 34, marginTop: 18 },
+  reference: { fontSize: 15, marginTop: 8 },
+  wordDivider: { height: 1, backgroundColor: "#FFFFFF33", marginVertical: 18 },
+  wordReflection: { fontSize: 14, lineHeight: 21 },
+  cardButton: { marginTop: 16, paddingTop: 12, borderTopWidth: 1, borderTopColor: "rgba(255, 255, 255, 0.2)", flexDirection: "row", alignItems: "center", gap: 6 },
+  cardButtonText: { fontSize: 12, fontWeight: "800" },
+  quizCard: { minHeight: 78, borderRadius: 19, borderWidth: 1, padding: 13, flexDirection: "row", alignItems: "center", marginBottom: 14 },
+  quizIcon: { width: 48, height: 48, borderRadius: 17, alignItems: "center", justifyContent: "center" },
+  quizText: { flex: 1, marginHorizontal: 12 },
+  quizEyebrow: { fontSize: 9, fontWeight: "800", letterSpacing: 1.4 },
+  quizTitle: { fontSize: 16, fontWeight: "800", marginTop: 3 },
+  quizCaption: { fontSize: 12, marginTop: 4 },
+  progressCard: { marginBottom: 25 },
+  progressTopLine: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  cardEyebrow: { fontSize: 10, fontWeight: "800", letterSpacing: 1.6 },
+  progressTitle: { fontSize: 18, fontWeight: "700", marginTop: 7, maxWidth: 220 },
+  progressCaption: { fontSize: 13, marginTop: 5 },
+  progressTrack: { height: 8, borderRadius: 8, overflow: "hidden", marginTop: 20 },
+  progressFill: { height: "100%", borderRadius: 8 },
+  statsRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 20 },
+  miniStat: { flex: 1, alignItems: "center", gap: 2 },
+  miniValue: { fontSize: 20, fontWeight: "800", marginTop: 3 },
+  miniLabel: { fontSize: 10, textAlign: "center" },
+  sectionHeading: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 13 },
+  sectionTitle: { fontSize: 21, fontFamily: "serif", fontWeight: "700" },
+  sectionCaption: { fontSize: 13, marginTop: 3 },
+  missionList: { gap: 10 },
+  missionRow: { minHeight: 76, borderRadius: 19, borderWidth: 1, padding: 13, flexDirection: "row", alignItems: "center" },
+  missionText: { flex: 1, marginHorizontal: 12 },
+  missionTitle: { fontSize: 15, fontWeight: "700" },
+  missionCaption: { fontSize: 12, marginTop: 4 },
+  quoteStrip: { borderTopWidth: 1, marginTop: 28, paddingTop: 16, flexDirection: "row", gap: 8, alignItems: "flex-start" },
+  quoteStripText: { flex: 1, fontFamily: "serif", fontSize: 14, lineHeight: 20 },
+  legalFooter: { alignItems: "center", paddingTop: 24, paddingBottom: 8 },
+  legalLabel: { fontSize: 11, marginBottom: 7 },
+  legalLinks: { flexDirection: "row", alignItems: "center", gap: 8 },
+  legalLink: { fontSize: 12, fontWeight: "700" },
+  legalDot: { fontSize: 14 },
   modalBackdrop: { flex: 1, justifyContent: "center", padding: 16 },
   modalSheet: { borderRadius: 25, padding: 17, maxHeight: "94%" },
   modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 },
