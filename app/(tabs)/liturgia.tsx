@@ -39,7 +39,7 @@ export default function HomeScreen() {
     return () => clearInterval(timer);
   }, []);
 
-  // Função para baixar/compartilhar o card da Palavra do Dia (igual à liturgia)
+  // Função exata utilizada na Liturgia para captura e download da imagem
   const downloadCard = async () => {
     if (!cardRef.current) return;
     if (Platform.OS === "web") {
@@ -87,11 +87,11 @@ export default function HomeScreen() {
           <View style={styles.wordDivider} />
           <Text style={[styles.wordReflection, { color: colors.onPrimary }]}>{dailyWord.reflection}</Text>
 
-          {/* Botão que abre o Modal de Gerar Imagem */}
+          {/* Botão para abrir a modal de geração de imagem */}
           <Pressable 
             onPress={() => setShareModalVisible(true)}
             accessibilityRole="button"
-            accessibilityLabel="Gerar imagem da Palavra do Dia para Status ou Stories"
+            accessibilityLabel="Gerar imagem da Palavra do Dia"
             style={({ pressed }) => [styles.cardButton, { opacity: pressed ? 0.7 : 1 }]}
           >
             <MaterialIcons name="image" size={17} color={colors.onPrimary} />
@@ -159,33 +159,36 @@ export default function HomeScreen() {
         </View>
       </ScrollView>
 
-      {/* Modal de Prévia e Geração de Imagem (Stories 9:16) */}
+      {/* Modal de prévia com Proporção de Quadrado (1:1.05) */}
       <Modal visible={shareModalVisible} transparent animationType="fade" onRequestClose={() => setShareModalVisible(false)}>
         <View style={[styles.modalBackdrop, { backgroundColor: "#1E1014CC" }]}>
           <View style={[styles.modalSheet, { backgroundColor: colors.background }]}>
             <View style={styles.modalHeader}>
               <View>
                 <Text style={[styles.modalEyebrow, { color: colors.primary }]}>PRONTO PARA COMPARTILHAR</Text>
-                <Text style={[styles.modalTitle, { color: colors.foreground }]}>Card para Status/Stories</Text>
+                <Text style={[styles.modalTitle, { color: colors.foreground }]}>Card Palavra do Dia</Text>
               </View>
               <Pressable onPress={() => setShareModalVisible(false)} accessibilityRole="button" accessibilityLabel="Fechar prévia">
                 <MaterialIcons name="close" size={24} color={colors.muted} />
               </Pressable>
             </View>
 
-            {/* Elemento capturado pelo cardRef */}
-            <View ref={cardRef} collapsable={false} style={[styles.shareCard, { backgroundColor: colors.primary }]}>
-              <View style={styles.shareCardTop}>
-                <Text style={[styles.shareBrand, { color: colors.onPrimary }]}>Palavra Viva</Text>
-                <Text style={styles.shareMark}>✦</Text>
+            {/* Container Quadrado Ajustado (1 : 1.05) */}
+            <View ref={cardRef} collapsable={false} style={[styles.shareCardSquare, { backgroundColor: colors.primary }]}>
+              <View>
+                <View style={styles.shareCardTop}>
+                  <Text style={[styles.shareBrand, { color: colors.onPrimary }]}>Palavra Viva</Text>
+                  <Text style={styles.shareMark}>✦</Text>
+                </View>
+                <Text style={styles.shareDate}>{dateLabel}</Text>
+                <View style={styles.shareRule} />
+                <Text style={styles.shareLabel}>PALAVRA DO DIA</Text>
+                <Text style={[styles.shareQuoteSquare, { color: colors.onPrimary }]}>“{dailyWord.quote}”</Text>
+                <Text style={[styles.shareReferenceSquare, { color: colors.onPrimary }]}>— {dailyWord.reference}</Text>
               </View>
-              <Text style={styles.shareDate}>{dateLabel}</Text>
-              <View style={styles.shareRule} />
-              <Text style={styles.shareLabel}>PALAVRA DO DIA</Text>
-              <Text style={[styles.shareReference, { color: colors.onPrimary }]}>{dailyWord.reference}</Text>
-              <Text style={[styles.shareQuote, { color: colors.onPrimary }]}>“{dailyWord.quote}”</Text>
+
               <View style={styles.shareFooter}>
-                <Text style={[styles.shareFooterText, { color: colors.onPrimary }]}>Acesse a Palavra Viva em</Text>
+                <Text style={[styles.shareFooterText, { color: colors.onPrimary }]}>Acesse em</Text>
                 <Text style={[styles.shareUrl, { color: colors.onPrimary }]}>palavra-viva-drab.vercel.app</Text>
               </View>
             </View>
@@ -268,17 +271,18 @@ const styles = StyleSheet.create({
   modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 },
   modalEyebrow: { fontSize: 10, fontWeight: "800", letterSpacing: 1.3 },
   modalTitle: { fontSize: 21, fontFamily: "serif", fontWeight: "700", marginTop: 4 },
-  shareCard: { width: "100%", aspectRatio: 9 / 16, borderRadius: 16, padding: 22, justifyContent: "space-between", overflow: "hidden" },
+  /* Estilo com Proporção do Quadrado (1 : 1.05) */
+  shareCardSquare: { width: "100%", aspectRatio: 1 / 1.05, borderRadius: 18, padding: 18, justifyContent: "space-between", overflow: "hidden" },
   shareCardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  shareBrand: { fontFamily: "serif", fontSize: 20, fontWeight: "700" },
-  shareMark: { color: "#E7BC6A", fontSize: 24 },
-  shareDate: { color: "#F0D7B7", fontSize: 11, textTransform: "capitalize", marginTop: 12 },
-  shareRule: { height: 1, backgroundColor: "#FFFFFF44", marginVertical: 18 },
-  shareLabel: { color: "#E7BC6A", fontSize: 10, letterSpacing: 1.7, fontWeight: "800" },
-  shareReference: { fontFamily: "serif", fontSize: 23, fontWeight: "700", marginTop: 9 },
-  shareQuote: { fontFamily: "serif", fontSize: 17, lineHeight: 25, marginTop: 16 },
-  shareFooter: { borderTopWidth: 1, borderTopColor: "#FFFFFF44", paddingTop: 12 },
-  shareFooterText: { fontSize: 10 },
-  shareUrl: { fontSize: 10, fontWeight: "700", marginTop: 3 },
+  shareBrand: { fontFamily: "serif", fontSize: 18, fontWeight: "700" },
+  shareMark: { color: "#E7BC6A", fontSize: 20 },
+  shareDate: { color: "#F0D7B7", fontSize: 10, textTransform: "capitalize", marginTop: 4 },
+  shareRule: { height: 1, backgroundColor: "#FFFFFF44", marginVertical: 12 },
+  shareLabel: { color: "#E7BC6A", fontSize: 9, letterSpacing: 1.5, fontWeight: "800" },
+  shareQuoteSquare: { fontFamily: "serif", fontSize: 18, lineHeight: 25, marginTop: 10 },
+  shareReferenceSquare: { fontSize: 13, fontWeight: "700", marginTop: 8 },
+  shareFooter: { borderTopWidth: 1, borderTopColor: "#FFFFFF44", paddingTop: 10 },
+  shareFooterText: { fontSize: 9 },
+  shareUrl: { fontSize: 9, fontWeight: "700", marginTop: 2 },
   modalActions: { flexDirection: "row", gap: 9, marginTop: 14 },
 });
