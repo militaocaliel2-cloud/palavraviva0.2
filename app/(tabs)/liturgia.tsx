@@ -22,6 +22,21 @@ const EXPORT_WIDTH = 1080;
 const EXPORT_HEIGHT = Math.round((EXPORT_WIDTH * 16) / 9);
 const FILE_NAME = "palavra-viva-evangelho.png";
 
+// Limite do texto do Evangelho dentro do card (evita corte brusco no fim da imagem)
+const SHARE_QUOTE_MAX_CHARS = 300;
+const SHARE_QUOTE_MAX_LINES = 10;
+const SHARE_CARD_RADIUS = 28;
+
+// Junta quebras de linha, corta no limite de caracteres sem partir palavras e adiciona reticências
+function truncateForCard(text: string, maxChars: number) {
+  const clean = text.replace(/\s+/g, " ").trim();
+  if (clean.length <= maxChars) return clean;
+  const cut = clean.slice(0, maxChars);
+  const lastSpace = cut.lastIndexOf(" ");
+  const safe = lastSpace > maxChars * 0.6 ? cut.slice(0, lastSpace) : cut;
+  return `${safe.replace(/[\s,;:.\-–—]+$/, "")}…`;
+}
+
 type ReadingSection = { key: string; label: string; readings: LiturgyReading[] };
 
 export default function LiturgyScreen() {
@@ -93,6 +108,10 @@ export default function LiturgyScreen() {
   const isToday = selectedDate.toDateString() === new Date().toDateString();
   const dateLabel = formatReadableDate(selectedDate);
   const dateKey = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
+  const shareQuoteText = useMemo(
+    () => truncateForCard(gospel?.texto ?? "A Palavra de Deus ilumina o caminho de hoje.", SHARE_QUOTE_MAX_CHARS),
+    [gospel?.texto],
+  );
   const reflection = getGospelReflection(selectedDate, gospel?.referencia ?? "o Evangelho de hoje");
 
   // WEB: gera a imagem em segundo plano assim que o modal abre.
@@ -122,7 +141,8 @@ export default function LiturgyScreen() {
         const canvas = await html2canvas(el, {
           scale: Math.max(2, EXPORT_WIDTH / width),
           useCORS: true,
-          backgroundColor: null,
+          backgroundColor: null, // mantém os cantos arredondados transparentes
+          logging: false,
           scrollX: 0,
           scrollY: 0,
         });
@@ -141,7 +161,7 @@ export default function LiturgyScreen() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [shareModalVisible, gospel?.texto, gospel?.referencia, dateLabel]);
+  }, [shareModalVisible, shareQuoteText, gospel?.referencia, dateLabel]);
 
   const moveDate = (amount: number) => {
     const next = new Date(selectedDate);
@@ -299,7 +319,7 @@ export default function LiturgyScreen() {
               <View style={styles.shareRule} />
               <Text style={styles.shareLabel}>EVANGELHO</Text>
               <Text style={[styles.shareReference, { color: colors.onPrimary }]}>{gospel?.referencia ?? "Palavra do dia"}</Text>
-              <Text style={[styles.shareQuote, { color: colors.onPrimary }]}>{gospel?.texto ?? "A Palavra de Deus ilumina o caminho de hoje."}</Text>
+              <Text numberOfLines={SHARE_QUOTE_MAX_LINES} ellipsizeMode="tail" style={[styles.shareQuote, { color: colors.onPrimary }]}>{shareQuoteText}</Text>
               <View style={styles.shareFooter}><Text style={[styles.shareFooterText, { color: colors.onPrimary }]}>Leia a liturgia completa em</Text><Text style={[styles.shareUrl, { color: colors.onPrimary }]}>palavra-viva-drab.vercel.app</Text></View>
             </View>
             <View style={styles.modalActions}>
@@ -388,7 +408,7 @@ const styles = StyleSheet.create({
   modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 },
   modalEyebrow: { fontSize: 10, fontWeight: "800", letterSpacing: 1.3 },
   modalTitle: { fontSize: 21, fontFamily: "serif", fontWeight: "700", marginTop: 4 },
-  shareCard: { width: "100%", aspectRatio: 9 / 16, borderRadius: 16, padding: 22, justifyContent: "space-between", overflow: "hidden" },
+  shareCard: { width: "100%", maxWidth: 340, alignSelf: "center", aspectRatio: 9 / 16, borderRadius: SHARE_CARD_RADIUS, padding: 22, justifyContent: "space-between", overflow: "hidden" },
   shareCardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   shareBrand: { fontFamily: "serif", fontSize: 20, fontWeight: "700" },
   shareMark: { color: "#E7BC6A", fontSize: 24 },
