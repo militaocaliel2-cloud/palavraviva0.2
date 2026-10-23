@@ -17,6 +17,11 @@ import { fetchLiturgy, formatReadableDate, type LiturgyDay, type LiturgyReading 
 
 const APP_URL = "https://palavra-viva-drab.vercel.app/";
 
+// Largura final da imagem exportada e proporção do card (9:16, formato Stories)
+const EXPORT_WIDTH = 1080;
+const EXPORT_HEIGHT = Math.round((EXPORT_WIDTH * 16) / 9);
+const FILE_NAME = "palavra-viva-evangelho.png";
+
 type ReadingSection = { key: string; label: string; readings: LiturgyReading[] };
 
 export default function LiturgyScreen() {
@@ -27,9 +32,12 @@ export default function LiturgyScreen() {
   const [fontScale, setFontScale] = useState(1);
   const [pickerVisible, setPickerVisible] = useState(false);
   const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [imageReady, setImageReady] = useState(Platform.OS !== "web");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const cardRef = useRef<View>(null);
+  const webFileRef = useRef<File | null>(null);
 
   const chooseDate = (date: Date) => {
     setLiturgy(null);
@@ -87,6 +95,54 @@ export default function LiturgyScreen() {
   const dateKey = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
   const reflection = getGospelReflection(selectedDate, gospel?.referencia ?? "o Evangelho de hoje");
 
+  // WEB: gera a imagem em segundo plano assim que o modal abre.
+  // Assim o botão só precisa chamar navigator.share() de imediato, sem nenhum await antes,
+  // mantendo o "gesto do usuário" exigido pelo Safari/iOS e Chrome mobile.
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+
+    if (!shareModalVisible) {
+      webFileRef.current = null;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setImageReady(false);
+      return;
+    }
+
+    let cancelled = false;
+    setImageReady(false);
+
+    // Espera a animação de fade do modal terminar antes de capturar
+    const timer = setTimeout(async () => {
+      try {
+        const el = cardRef.current as unknown as HTMLElement | null;
+        if (!el) return;
+
+        const html2canvas = (await import("html2canvas")).default;
+        const width = el.offsetWidth || 300;
+        const canvas = await html2canvas(el, {
+          scale: Math.max(2, EXPORT_WIDTH / width),
+          useCORS: true,
+          backgroundColor: null,
+          scrollX: 0,
+          scrollY: 0,
+        });
+
+        const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+        if (blob && !cancelled) {
+          webFileRef.current = new File([blob], FILE_NAME, { type: "image/png" });
+          setImageReady(true);
+        }
+      } catch (err) {
+        console.log("Erro ao gerar imagem", err);
+      }
+    }, 350);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [shareModalVisible, gospel?.texto, gospel?.referencia, dateLabel]);
+
   const moveDate = (amount: number) => {
     const next = new Date(selectedDate);
     next.setDate(next.getDate() + amount);
@@ -105,19 +161,70 @@ export default function LiturgyScreen() {
   };
 
   const downloadCard = async () => {
-    if (!cardRef.current) return;
+    if (saving) return;
+
+    // ---------- WEB ----------
     if (Platform.OS === "web") {
-      const html2canvas = (await import("html2canvas")).default;
-      const canvas = await html2canvas(cardRef.current as unknown as HTMLElement, { scale: 2, useCORS: true, backgroundColor: null });
+      const file = webFileRef.current;
+      if (!file) return; // imagem ainda sendo gerada
+
+      // IMPORTANTE: nenhum await antes do share, para manter o gesto do usuário
+      if (typeof navigator !== "undefined" && navigator.canShare?.({ files: [file] }) && navigator.share) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: "Palavra Viva",
+            text: "Confira o Evangelho de hoje!",
+          });
+          return;
+        } catch (err) {
+          // Usuário cancelou o menu de compartilhar: não baixa nada
+          if ((err as Error).name === "AbortError") return;
+          console.log("Compartilhamento não suportado, usando download direto", err);
+        }
+      }
+
+      // Fallback: download direto (mais leve que toDataURL)
+      const url = URL.createObjectURL(file);
       const link = document.createElement("a");
-      link.download = "palavra-viva-evangelho.png";
-      link.href = canvas.toDataURL("image/png");
+      link.href = url;
+      link.download = file.name;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
       return;
     }
-    const uri = await captureRef(cardRef, { format: "png", quality: 1, result: "tmpfile" });
-    if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(uri, { mimeType: "image/png", dialogTitle: "Salvar card da Palavra Viva" });
+
+    // ---------- NATIVO (iOS/Android) ----------
+    if (!cardRef.current) return;
+    try {
+      setSaving(true);
+      const uri = await captureRef(cardRef, {
+        format: "png",
+        quality: 1,
+        result: "tmpfile",
+        width: EXPORT_WIDTH,
+        height: EXPORT_HEIGHT,
+      });
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, {
+          mimeType: "image/png",
+          UTI: "public.png",
+          dialogTitle: "Salvar card da Palavra Viva",
+        });
+      } else {
+        console.log("Compartilhamento não disponível neste dispositivo");
+      }
+    } catch (err) {
+      console.log("Erro ao compartilhar", err);
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const downloadDisabled = saving || !imageReady;
 
   return (
     <ScreenContainer>
@@ -195,7 +302,10 @@ export default function LiturgyScreen() {
               <Text style={[styles.shareQuote, { color: colors.onPrimary }]}>{gospel?.texto ?? "A Palavra de Deus ilumina o caminho de hoje."}</Text>
               <View style={styles.shareFooter}><Text style={[styles.shareFooterText, { color: colors.onPrimary }]}>Leia a liturgia completa em</Text><Text style={[styles.shareUrl, { color: colors.onPrimary }]}>palavra-viva-drab.vercel.app</Text></View>
             </View>
-            <View style={styles.modalActions}><PrimaryButton variant="outline" onPress={() => setShareModalVisible(false)}>Fechar</PrimaryButton><PrimaryButton icon="download" onPress={downloadCard}>Baixar Imagem</PrimaryButton></View>
+            <View style={styles.modalActions}>
+              <PrimaryButton variant="outline" onPress={() => setShareModalVisible(false)}>Fechar</PrimaryButton>
+              <PrimaryButton icon={downloadDisabled ? "hourglass-empty" : "share"} onPress={downloadCard} accessibilityLabel="Baixar ou compartilhar imagem">{downloadDisabled ? "Preparando..." : "Salvar / Compartilhar"}</PrimaryButton>
+            </View>
           </View>
         </View>
       </Modal>
