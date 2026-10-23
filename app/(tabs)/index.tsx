@@ -39,18 +39,42 @@ export default function HomeScreen() {
     return () => clearInterval(timer);
   }, []);
 
-  // Função exata para captura e download da imagem
+  // Função otimizada com suporte ao menu de compartilhamento nativo do celular na Web
   const downloadCard = async () => {
     if (!cardRef.current) return;
     if (Platform.OS === "web") {
       const html2canvas = (await import("html2canvas")).default;
       const canvas = await html2canvas(cardRef.current as unknown as HTMLElement, { scale: 2, useCORS: true, backgroundColor: null });
-      const link = document.createElement("a");
-      link.download = "palavra-viva-do-dia.png";
-      link.href = canvas.toDataURL("image/png");
-      link.click();
+      
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        const file = new File([blob], "palavra-viva-do-dia.png", { type: "image/png" });
+
+        // Se o navegador do celular suportar compartilhamento de arquivos nativo, abre o menu do celular
+        if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: "Palavra Viva",
+              text: "Confira a Palavra do Dia de hoje!",
+            });
+            return;
+          } catch (err) {
+            if ((err as Error).name !== "AbortError") {
+              console.log("Compartilhamento cancelado ou não suportado", err);
+            }
+          }
+        }
+
+        // Fallback: se não suportar o menu nativo, faz o download direto via link
+        const link = document.createElement("a");
+        link.download = "palavra-viva-do-dia.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      }, "image/png");
       return;
     }
+
     const uri = await captureRef(cardRef, { format: "png", quality: 1, result: "tmpfile" });
     if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(uri, { mimeType: "image/png", dialogTitle: "Salvar card da Palavra Viva" });
   };
@@ -193,7 +217,7 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            {/* Botões do Modal corrigidos com Pressable nativo */}
+            {/* Botões do Modal com Pressable nativo */}
             <View style={styles.modalActions}>
               <Pressable 
                 onPress={() => setShareModalVisible(false)} 
@@ -205,14 +229,14 @@ export default function HomeScreen() {
               <Pressable 
                 onPress={downloadCard} 
                 accessibilityRole="button"
-                accessibilityLabel="Baixar imagem"
+                accessibilityLabel="Baixar ou compartilhar imagem"
                 style={({ pressed }) => [
                   styles.modalDownloadButton, 
                   { backgroundColor: colors.primary, opacity: pressed ? 0.8 : 1 }
                 ]}
               >
-                <MaterialIcons name="download" size={18} color={colors.onPrimary} />
-                <Text style={[styles.modalDownloadText, { color: colors.onPrimary }]}>Baixar Imagem</Text>
+                <MaterialIcons name="share" size={18} color={colors.onPrimary} />
+                <Text style={[styles.modalDownloadText, { color: colors.onPrimary }]}>Salvar / Compartilhar</Text>
               </Pressable>
             </View>
           </View>
