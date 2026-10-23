@@ -1,3 +1,22 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Define as variáveis padrão claras para evitar o flash inicial de cores */
+:root {
+  --color-primary: #70253A;
+  --color-background: #F6EFE6;
+  --color-surface: #FFFCF7;
+  --color-foreground: #28171C;
+  --color-muted: #F0DED9;
+  --color-border: #E7DCD0;
+  --color-success: #2E7D32;
+  --color-warning: #ED6C02;
+  --color-error: #D32F2F;
+}
+
+/* Garante o fundo e texto padrão no HTML/Body da web desde o primeiro frame */
+html, body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
