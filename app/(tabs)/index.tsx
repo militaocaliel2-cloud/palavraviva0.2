@@ -41,9 +41,14 @@ export default function HomeScreen() {
             <Text style={[styles.brandName, { color: colors.foreground }]}>Palavra <Text style={{ color: colors.primary }}>Viva</Text></Text>
             <Text style={[styles.brandMeta, { color: colors.muted }]}>seu caminho diário de fé</Text>
           </View>
-          <Pressable onPress={() => setThemePreference(colorScheme === "dark" ? "light" : "dark")} accessibilityRole="button" accessibilityLabel="Alternar modo claro e escuro" style={[styles.themeButton, { backgroundColor: colors.primarySoft }]}>
-            <Text style={[styles.themeSymbol, { color: colors.primary }]}>{colorScheme === "dark" ? "☼" : "☾"}</Text>
-          </Pressable>
+          <View style={styles.headerActions}>
+            <Pressable onPress={() => router.push("/configuracoes" as never)} accessibilityRole="button" accessibilityLabel="Abrir configurações" style={[styles.settingsButton, { backgroundColor: colors.primarySoft }]}>
+              <MaterialIcons name="tune" size={19} color={colors.primary} />
+            </Pressable>
+            <Pressable onPress={() => setThemePreference(colorScheme === "dark" ? "light" : "dark")} accessibilityRole="button" accessibilityLabel="Alternar modo claro e escuro" style={[styles.themeButton, { backgroundColor: colors.primarySoft }]}>
+              <Text style={[styles.themeSymbol, { color: colors.primary }]}>{colorScheme === "dark" ? "☼" : "☾"}</Text>
+            </Pressable>
+          </View>
         </View>
 
         <ScreenHeader eyebrow={dateLabel} title="Um pequeno passo para hoje." subtitle="Que a sua presença encontre espaço entre as coisas do dia." />
@@ -140,6 +145,8 @@ const styles = StyleSheet.create({
   brandName: { fontFamily: "serif", fontSize: 21, fontWeight: "700" },
   brandMeta: { fontSize: 10, letterSpacing: 0.4, marginTop: 1 },
   themeButton: { marginLeft: "auto", width: 42, height: 42, borderRadius: 15, alignItems: "center", justifyContent: "center" },
+  headerActions: { marginLeft: "auto", flexDirection: "row", gap: 8 },
+  settingsButton: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   themeSymbol: { fontSize: 24, lineHeight: 27, fontWeight: "700" },
   wordCard: { padding: 20, marginBottom: 14 },
   wordLabelRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },

@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { Appearance } from "react-native";
 
 import { useThemeContext } from "@/lib/theme-provider";
 
@@ -132,7 +133,7 @@ export function FaithJourneyProvider({ children }: { children: React.ReactNode }
       resetRosary: () => setState((current) => ({ ...current, rosaryStep: 0, completed: { ...current.completed, rosary: false } })),
       setThemePreference: (preference) => {
         setState((current) => ({ ...current, themePreference: preference }));
-        if (preference !== "system") setColorScheme(preference);
+        setColorScheme(preference === "system" ? (Appearance.getColorScheme() === "dark" ? "dark" : "light") : preference);
       },
       setReminderSettings: (settings) => setState((current) => ({ ...current, ...settings })),
       toggleFavorite: (favorite) => setState((current) => {

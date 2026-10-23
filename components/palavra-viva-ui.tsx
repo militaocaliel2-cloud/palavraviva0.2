@@ -30,7 +30,7 @@ export function PrimaryButton({ children, onPress, icon, variant = "primary", st
     <Pressable
       {...{ onPress, disabled, accessibilityLabel }}
       accessibilityRole="button"
-      style={({ pressed }) => [styles.button, { backgroundColor, borderColor: colors.primary, opacity: pressed || disabled ? 0.72 : 1 }, variant === "outline" ? { borderWidth: 1 } : null, style]}
+      style={({ pressed }) => [styles.button, { backgroundColor, borderColor: colors.primary, opacity: pressed || disabled ? 0.72 : 1, shadowColor: colors.primary }, variant === "outline" ? { borderWidth: 1 } : null, style]}
     >
       {icon ? <MaterialIcons name={icon} size={19} color={foregroundColor} /> : null}
       <Text style={[styles.buttonText, { color: foregroundColor }]}>{children}</Text>
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 30, lineHeight: 36, fontWeight: "700", letterSpacing: -0.7 },
   subtitle: { fontSize: 15, lineHeight: 22, marginTop: 7 },
   card: { borderRadius: 22, borderWidth: 1, padding: 18, shadowColor: "#2E1B1F", shadowOpacity: 0.07, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 2 },
-  button: { minHeight: 50, borderRadius: 16, paddingHorizontal: 17, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
+  button: { minHeight: 48, borderRadius: 14, paddingHorizontal: 18, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, shadowOpacity: 0.14, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
   buttonText: { fontSize: 15, fontWeight: "700" },
   ring: { alignItems: "center", justifyContent: "center", borderWidth: 7 },
   ringInner: { alignItems: "center", justifyContent: "center", borderWidth: 2 },

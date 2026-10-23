@@ -108,3 +108,9 @@
 - [x] O conteúdo Web é limitado a uma largura confortável em telas grandes e permanece adaptável em viewport móvel.
 - [x] O PWA pode ser instalado em modo standalone, aceita orientação livre e oferece atalhos para Liturgia diária e Quiz do Dia.
 - [x] O repositório contém configuração explícita para a Vercel usar `pnpm install --frozen-lockfile`, `npx expo export --platform web` e publicar `dist`.
+
+## Atualização visual e Configurações
+
+- [x] O fundo global, as superfícies e os botões foram atualizados com a nova identidade visual marfim, bordô e dourado, incluindo estados de pressão, contraste e sombra leve.
+- [x] A página `/configuracoes` permite escolher tema Sistema, Claro ou Escuro, alternar lembretes, abrir Favoritos e Liturgia e acessar Política de Privacidade e Termos de Uso.
+- [x] A home oferece acesso visível à página Configurações, e a rota foi adicionada ao manifesto Web.

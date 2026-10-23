@@ -106,8 +106,8 @@ const config: ExpoConfig = {
     name: "Palavra Viva — Liturgia e oração",
     shortName: "Palavra Viva",
     description: "Liturgia diária, oração e um caminho de fé para cada dia.",
-    themeColor: "#7B2635",
-    backgroundColor: "#FBF6EE",
+    themeColor: "#70253A",
+    backgroundColor: "#F6EFE6",
   },
   plugins: [
     "expo-asset",

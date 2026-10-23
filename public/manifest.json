@@ -8,8 +8,8 @@
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "orientation": "any",
-  "background_color": "#FBF6EE",
-  "theme_color": "#7B2635",
+  "background_color": "#F6EFE6",
+  "theme_color": "#70253A",
   "icons": [
     { "src": "/assets/images/icon.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any maskable" },
     { "src": "/assets/images/favicon.png", "sizes": "256x256", "type": "image/png", "purpose": "any" }

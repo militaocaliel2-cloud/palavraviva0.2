@@ -1,10 +1,10 @@
 /** @type {const} */
 const themeColors = {
-  primary: { light: '#7B2635', dark: '#D58B8E' },
-  primarySoft: { light: '#F2E0D8', dark: '#40272C' },
-  gold: { light: '#B78335', dark: '#E7BC6A' },
-  background: { light: '#FBF6EE', dark: '#201719' },
-  surface: { light: '#FFFDF8', dark: '#2B2022' },
+  primary: { light: '#70253A', dark: '#D99AA1' },
+  primarySoft: { light: '#F0DED9', dark: '#43272F' },
+  gold: { light: '#B27A2C', dark: '#E8BE70' },
+  background: { light: '#F6EFE6', dark: '#1D171A' },
+  surface: { light: '#FFFCF7', dark: '#2A2023' },
   foreground: { light: '#2E1B1F', dark: '#F8EEE8' },
   muted: { light: '#796D68', dark: '#C7B8B2' },
   border: { light: '#E7DCD0', dark: '#4D3B3D' },
