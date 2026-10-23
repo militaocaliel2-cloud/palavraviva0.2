@@ -99,3 +99,4 @@ O wordmark usa “Palavra” em serif editorial e “Viva” em vinho, acompanha
 
 - O mesmo projeto Expo Router será entregue como PWA Web responsiva, com saída estática para navegador e instalação via `public/manifest.json`. A versão nativa continua preservada para uma etapa posterior; nenhum recurso de Liturgia, áudio, reflexão, favoritos, notificações, quiz ou páginas legais será removido.
 - O `ScreenContainer` limita a largura do conteúdo no Web para uma leitura confortável em desktop e mantém o layout de uso com uma mão em telas estreitas. O manifesto aceita orientação livre, oferece modo standalone e inclui atalhos para Liturgia e Quiz.
+- O arquivo `vercel.json` fixa a instalação com pnpm, a exportação `npx expo export --platform web` e a pasta publicada `dist`, deixando o repositório pronto para importação na Vercel pela branch `main`.

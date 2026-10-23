@@ -107,3 +107,4 @@
 - [x] O mesmo projeto funciona como aplicativo Web responsivo em navegador móvel e desktop, sem remover a futura experiência nativa Expo.
 - [x] O conteúdo Web é limitado a uma largura confortável em telas grandes e permanece adaptável em viewport móvel.
 - [x] O PWA pode ser instalado em modo standalone, aceita orientação livre e oferece atalhos para Liturgia diária e Quiz do Dia.
+- [x] O repositório contém configuração explícita para a Vercel usar `pnpm install --frozen-lockfile`, `npx expo export --platform web` e publicar `dist`.
