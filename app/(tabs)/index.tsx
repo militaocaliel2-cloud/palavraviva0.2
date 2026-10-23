@@ -39,7 +39,7 @@ export default function HomeScreen() {
     return () => clearInterval(timer);
   }, []);
 
-  // Função exata utilizada na Liturgia para captura e download da imagem
+  // Função exata para captura e download da imagem
   const downloadCard = async () => {
     if (!cardRef.current) return;
     if (Platform.OS === "web") {
@@ -193,9 +193,27 @@ export default function HomeScreen() {
               </View>
             </View>
 
+            {/* Botões do Modal corrigidos com Pressable nativo */}
             <View style={styles.modalActions}>
-              <PrimaryButton variant="outline" onPress={() => setShareModalVisible(false)}>Fechar</PrimaryButton>
-              <PrimaryButton icon="download" onPress={downloadCard}>Baixar Imagem</PrimaryButton>
+              <Pressable 
+                onPress={() => setShareModalVisible(false)} 
+                style={({ pressed }) => [styles.modalCloseButton, { opacity: pressed ? 0.7 : 1 }]}
+              >
+                <Text style={[styles.modalCloseText, { color: colors.foreground }]}>Fechar</Text>
+              </Pressable>
+
+              <Pressable 
+                onPress={downloadCard} 
+                accessibilityRole="button"
+                accessibilityLabel="Baixar imagem"
+                style={({ pressed }) => [
+                  styles.modalDownloadButton, 
+                  { backgroundColor: colors.primary, opacity: pressed ? 0.8 : 1 }
+                ]}
+              >
+                <MaterialIcons name="download" size={18} color={colors.onPrimary} />
+                <Text style={[styles.modalDownloadText, { color: colors.onPrimary }]}>Baixar Imagem</Text>
+              </Pressable>
             </View>
           </View>
         </View>
@@ -271,7 +289,6 @@ const styles = StyleSheet.create({
   modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 },
   modalEyebrow: { fontSize: 10, fontWeight: "800", letterSpacing: 1.3 },
   modalTitle: { fontSize: 21, fontFamily: "serif", fontWeight: "700", marginTop: 4 },
-  /* Estilo com Proporção do Quadrado (1 : 1.05) */
   shareCardSquare: { width: "100%", aspectRatio: 1 / 1.05, borderRadius: 18, padding: 18, justifyContent: "space-between", overflow: "hidden" },
   shareCardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   shareBrand: { fontFamily: "serif", fontSize: 18, fontWeight: "700" },
@@ -284,5 +301,9 @@ const styles = StyleSheet.create({
   shareFooter: { borderTopWidth: 1, borderTopColor: "#FFFFFF44", paddingTop: 10 },
   shareFooterText: { fontSize: 9 },
   shareUrl: { fontSize: 9, fontWeight: "700", marginTop: 2 },
-  modalActions: { flexDirection: "row", gap: 9, marginTop: 14 },
+  modalActions: { flexDirection: "row", gap: 10, marginTop: 16, alignItems: "center" },
+  modalCloseButton: { paddingVertical: 12, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1, borderColor: "#ccc", alignItems: "center", justifyContent: "center", flex: 1 },
+  modalCloseText: { fontSize: 14, fontWeight: "700" },
+  modalDownloadButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 14, flex: 2 },
+  modalDownloadText: { fontSize: 14, fontWeight: "800" },
 });
