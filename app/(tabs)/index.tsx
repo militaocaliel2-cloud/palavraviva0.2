@@ -32,6 +32,15 @@ export default function HomeScreen() {
     return () => clearInterval(timer);
   }, []);
 
+  // Função para gerar/compartilhar a imagem da Palavra do Dia
+  const handleGerarImagem = () => {
+    // Redireciona para a liturgia com o gerador de imagem ou dispara a sua lógica de imagem
+    router.push({
+      pathname: "/liturgia",
+      params: { mode: "share", quote: dailyWord.quote, reference: dailyWord.reference }
+    } as never);
+  };
+
   return (
     <ScreenContainer>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
@@ -53,6 +62,7 @@ export default function HomeScreen() {
 
         <ScreenHeader eyebrow={dateLabel} title="Um pequeno passo para hoje." subtitle="Que a sua presença encontre espaço entre as coisas do dia." />
 
+        {/* Card da Palavra do Dia */}
         <SurfaceCard style={[styles.wordCard, { backgroundColor: colors.primary, borderColor: colors.primary }]}>
           <View style={styles.wordLabelRow}>
             <Text style={styles.wordLabel}>PALAVRA DO DIA</Text>
@@ -62,6 +72,20 @@ export default function HomeScreen() {
           <Text style={[styles.reference, { color: colors.onPrimary }]}>— {dailyWord.reference}</Text>
           <View style={styles.wordDivider} />
           <Text style={[styles.wordReflection, { color: colors.onPrimary }]}>{dailyWord.reflection}</Text>
+
+          {/* Botão Gerar Imagem para Status/Stories */}
+          <Pressable 
+            onPress={handleGerarImagem}
+            accessibilityRole="button"
+            accessibilityLabel="Gerar Imagem para Status e Stories"
+            style={({ pressed }) => [
+              styles.shareImageButton, 
+              { opacity: pressed ? 0.8 : 1 }
+            ]}
+          >
+            <MaterialIcons name="image" size={18} color="#FFB3C1" />
+            <Text style={styles.shareImageButtonText}>Gerar Imagem para Status/Stories</Text>
+          </Pressable>
         </SurfaceCard>
 
         <Pressable onPress={() => router.push("/quiz" as never)} accessibilityRole="button" accessibilityLabel="Abrir Quiz do Dia" style={({ pressed }) => [styles.quizCard, { backgroundColor: colors.surface, borderColor: colors.border, opacity: pressed ? 0.75 : 1 }]}>
@@ -155,6 +179,21 @@ const styles = StyleSheet.create({
   reference: { fontSize: 15, marginTop: 8 },
   wordDivider: { height: 1, backgroundColor: "#FFFFFF33", marginVertical: 18 },
   wordReflection: { fontSize: 14, lineHeight: 21 },
+  // Estilos adicionados para o botão de imagem
+  shareImageButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 18,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.15)",
+  },
+  shareImageButtonText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "700",
+  },
   quizCard: { minHeight: 78, borderRadius: 19, borderWidth: 1, padding: 13, flexDirection: "row", alignItems: "center", marginBottom: 14 },
   quizIcon: { width: 48, height: 48, borderRadius: 17, alignItems: "center", justifyContent: "center" },
   quizText: { flex: 1, marginHorizontal: 12 },
